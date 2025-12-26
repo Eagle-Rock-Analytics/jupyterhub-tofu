@@ -53,5 +53,5 @@ RUN mamba run -n cae python -c "import climakitae; print('climakitae OK')" && \
 # Add labels for tracking
 LABEL maintainer="CAE Team"
 LABEL description="py-rocket-base with CAE kernel (climakitae + pangeo stack)"
-LABEL base_image="ghcr.io/nmfs-opensci/py-rocket-base:${BASE_TAG}"
+LABEL base_image="ghcr.io/nmfs-opensci/py-rocket-base:2025.12.22"
 LABEL features="vscode,rstudio,desktop,cae-kernel,pangeo-stack,climakitae"

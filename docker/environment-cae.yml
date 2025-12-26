@@ -33,7 +33,7 @@ dependencies:
   - jupyterlab_code_formatter
   - jupytext
   - nbgitpuller
-  - retrolab
+  # retrolab removed - incompatible with JupyterLab 4+
 
   # =============================================================================
   # Dask - distributed computing
