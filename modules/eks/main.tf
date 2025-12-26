@@ -764,49 +764,7 @@ resource "aws_eks_pod_identity_association" "ebs_csi_driver" {
   ]
 }
 
-# Cluster Autoscaler IRSA
-module "cluster_autoscaler_irsa" {
-  source = "../irsa"
-
-  cluster_name      = var.cluster_name
-  oidc_provider_arn = aws_iam_openid_connect_provider.cluster.arn
-  namespace         = "kube-system"
-  service_account   = "cluster-autoscaler"
-
-  policy_statements = [
-    {
-      Effect = "Allow"
-      Action = [
-        "autoscaling:DescribeAutoScalingGroups",
-        "autoscaling:DescribeAutoScalingInstances",
-        "autoscaling:DescribeLaunchConfigurations",
-        "autoscaling:DescribeScalingActivities",
-        "autoscaling:DescribeTags",
-        "ec2:DescribeImages",
-        "ec2:DescribeInstanceTypes",
-        "ec2:DescribeLaunchTemplateVersions",
-        "ec2:GetInstanceTypesFromInstanceRequirements",
-        "eks:DescribeNodegroup"
-      ]
-      Resource = "*"
-    },
-    {
-      Effect = "Allow"
-      Action = [
-        "autoscaling:SetDesiredCapacity",
-        "autoscaling:TerminateInstanceInAutoScalingGroup"
-      ]
-      Resource = "*"
-      Condition = {
-        StringEquals = {
-          "autoscaling:ResourceTag/kubernetes.io/cluster/${var.cluster_name}" = "owned"
-        }
-      }
-    }
-  ]
-
-  tags = var.tags
-}
+# Cluster Autoscaler IAM is now managed via Pod Identity in main.tf
 
 # User Node Group Scheduled Scaling
 # Scales up user node groups during business hours (e.g., 8am-5pm PT Mon-Fri)

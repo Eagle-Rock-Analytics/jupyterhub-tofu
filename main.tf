@@ -258,10 +258,7 @@ module "eks" {
 module "kubernetes" {
   source = "./modules/kubernetes"
 
-  cluster_name      = local.cluster_name
-  s3_bucket         = local.s3_bucket_name
-  kms_key_id        = module.kms.key_id
-  oidc_provider_arn = module.eks.oidc_provider_arn
+  cluster_name = local.cluster_name
 
   # AWS Auth - grant cluster access to IAM roles/users
   node_role_arn       = module.eks.node_iam_role_arn
@@ -319,8 +316,7 @@ module "helm" {
   dask_idle_timeout   = var.dask_idle_timeout
 
   # Cluster autoscaler
-  region                      = var.region
-  cluster_autoscaler_role_arn = module.eks.cluster_autoscaler_arn
+  region = var.region
 
   # Node group architecture
   use_three_node_groups = var.use_three_node_groups
@@ -350,6 +346,78 @@ module "helm" {
   default_url   = var.default_url
 
   depends_on = [module.kubernetes]
+}
+
+# Cluster Autoscaler with Pod Identity
+resource "aws_iam_role" "cluster_autoscaler" {
+  name = "${local.cluster_name}-cluster-autoscaler"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "pods.eks.amazonaws.com"
+      }
+      Action = [
+        "sts:AssumeRole",
+        "sts:TagSession"
+      ]
+    }]
+  })
+
+  tags = local.common_tags
+}
+
+resource "aws_iam_role_policy" "cluster_autoscaler" {
+  name = "${local.cluster_name}-cluster-autoscaler-policy"
+  role = aws_iam_role.cluster_autoscaler.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "DescribeResources"
+        Effect = "Allow"
+        Action = [
+          "autoscaling:DescribeAutoScalingGroups",
+          "autoscaling:DescribeAutoScalingInstances",
+          "autoscaling:DescribeLaunchConfigurations",
+          "autoscaling:DescribeScalingActivities",
+          "autoscaling:DescribeTags",
+          "ec2:DescribeImages",
+          "ec2:DescribeInstanceTypes",
+          "ec2:DescribeLaunchTemplateVersions",
+          "ec2:GetInstanceTypesFromInstanceRequirements",
+          "eks:DescribeNodegroup"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "ScaleNodeGroups"
+        Effect = "Allow"
+        Action = [
+          "autoscaling:SetDesiredCapacity",
+          "autoscaling:TerminateInstanceInAutoScalingGroup"
+        ]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "autoscaling:ResourceTag/kubernetes.io/cluster/${local.cluster_name}" = "owned"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_eks_pod_identity_association" "cluster_autoscaler" {
+  cluster_name    = local.cluster_name
+  namespace       = "kube-system"
+  service_account = "cluster-autoscaler"
+  role_arn        = aws_iam_role.cluster_autoscaler.arn
+
+  depends_on = [module.eks]
 }
 
 # Module: Kubecost (Cost Monitoring) with Pod Identity
@@ -382,24 +450,65 @@ resource "aws_iam_role_policy" "kubecost" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
+    Statement = concat([
       {
+        Sid    = "CostExplorerAccess"
         Effect = "Allow"
         Action = [
           "ce:GetCostAndUsage",
           "ce:GetCostForecast",
+          "ce:GetReservationUtilization",
+          "ce:GetSavingsPlansUtilization",
+          "pricing:GetProducts"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "EC2DescribeForInventory"
+        Effect = "Allow"
+        Action = [
+          "ec2:DescribeInstances",
+          "ec2:DescribeVolumes",
+          "ec2:DescribeRegions"
+        ]
+        Resource = "*"
+      }
+    ],
+    # CUR bucket access - only if CUR is enabled (bucket exists)
+    local.cur_bucket_name != "" ? [
+      {
+        Sid    = "CURBucketAccess"
+        Effect = "Allow"
+        Action = [
           "s3:GetObject",
-          "s3:ListBucket",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          "arn:aws:s3:::${local.cur_bucket_name}",
+          "arn:aws:s3:::${local.cur_bucket_name}/*"
+        ]
+      },
+      {
+        Sid    = "AthenaQueryAccess"
+        Effect = "Allow"
+        Action = [
           "athena:StartQueryExecution",
           "athena:GetQueryExecution",
-          "athena:GetQueryResults",
+          "athena:GetQueryResults"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "GlueCatalogAccess"
+        Effect = "Allow"
+        Action = [
           "glue:GetDatabase",
           "glue:GetTable",
           "glue:GetPartitions"
         ]
         Resource = "*"
       }
-    ]
+    ] : [])
   })
 }
 
@@ -410,6 +519,85 @@ resource "aws_eks_pod_identity_association" "kubecost" {
   namespace       = "kubecost"
   service_account = "kubecost-cost-analyzer"
   role_arn        = aws_iam_role.kubecost[0].arn
+
+  depends_on = [module.eks]
+}
+
+# User S3 Access with Pod Identity
+# IAM Role for JupyterHub user pods to access S3
+resource "aws_iam_role" "user_s3" {
+  count = var.enable_jupyterhub ? 1 : 0
+  name  = "${local.cluster_name}-user-s3"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "pods.eks.amazonaws.com"
+      }
+      Action = [
+        "sts:AssumeRole",
+        "sts:TagSession"
+      ]
+    }]
+  })
+
+  tags = local.common_tags
+}
+
+resource "aws_iam_role_policy" "user_s3" {
+  count = var.enable_jupyterhub ? 1 : 0
+  name  = "${local.cluster_name}-user-s3-policy"
+  role  = aws_iam_role.user_s3[0].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "ListBuckets"
+        Effect = "Allow"
+        Action = [
+          "s3:ListAllMyBuckets",
+          "s3:GetBucketLocation"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "ScratchBucketAccess"
+        Effect = "Allow"
+        Action = [
+          "s3:ListBucket",
+          "s3:ListBucketMultipartUploads",
+          "s3:GetBucketLocation"
+        ]
+        Resource = "arn:aws:s3:::${local.s3_bucket_name}"
+      },
+      {
+        Sid    = "ScratchBucketObjectAccess"
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:GetObjectVersion",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:DeleteObjectVersion",
+          "s3:ListMultipartUploadParts",
+          "s3:AbortMultipartUpload"
+        ]
+        Resource = "arn:aws:s3:::${local.s3_bucket_name}/*"
+      }
+    ]
+  })
+}
+
+# Pod Identity Association for user S3 access
+resource "aws_eks_pod_identity_association" "user_s3" {
+  count           = var.enable_jupyterhub ? 1 : 0
+  cluster_name    = local.cluster_name
+  namespace       = "daskhub"
+  service_account = "user-sa"
+  role_arn        = aws_iam_role.user_s3[0].arn
 
   depends_on = [module.eks]
 }

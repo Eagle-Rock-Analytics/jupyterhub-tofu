@@ -153,7 +153,7 @@ additional_image_choices = [
     default      = false
   },
   {
-    name         = "jupyter/scipy-notebook:2024-12-09"
+    name         = "jupyter/scipy-notebook:latest"
     slug         = "scipy"
     display_name = "SciPy Notebook (no VSCode)"
     description  = "Jupyter's official SciPy notebook - JupyterLab only"

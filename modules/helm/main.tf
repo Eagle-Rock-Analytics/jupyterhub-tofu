@@ -448,6 +448,7 @@ resource "random_password" "gateway_token" {
 }
 
 # Cluster Autoscaler
+# Pod Identity handles IAM - no IRSA annotations needed
 resource "helm_release" "cluster_autoscaler" {
   name       = "cluster-autoscaler"
   repository = "https://kubernetes.github.io/autoscaler"
@@ -466,9 +467,7 @@ resource "helm_release" "cluster_autoscaler" {
         serviceAccount = {
           create = true
           name   = "cluster-autoscaler"
-          annotations = {
-            "eks.amazonaws.com/role-arn" = var.cluster_autoscaler_role_arn
-          }
+          # No annotations - Pod Identity association is in main.tf
         }
       }
       extraArgs = {

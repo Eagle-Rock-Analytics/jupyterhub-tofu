@@ -185,11 +185,6 @@ variable "region" {
   type        = string
 }
 
-variable "cluster_autoscaler_role_arn" {
-  description = "IAM role ARN for cluster autoscaler"
-  type        = string
-}
-
 variable "use_three_node_groups" {
   description = "Use 3-node-group architecture (system, user, worker) vs 2-node (main, worker)"
   type        = bool

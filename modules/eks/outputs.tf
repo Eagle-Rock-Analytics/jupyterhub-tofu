@@ -110,7 +110,4 @@ output "kubectl_config_command" {
   value       = "aws eks update-kubeconfig --region ${var.region} --name ${aws_eks_cluster.main.name}"
 }
 
-output "cluster_autoscaler_arn" {
-  description = "ARN of the cluster autoscaler IAM role"
-  value       = module.cluster_autoscaler_irsa.role_arn
-}
+# cluster_autoscaler_arn output removed - now using Pod Identity in main.tf

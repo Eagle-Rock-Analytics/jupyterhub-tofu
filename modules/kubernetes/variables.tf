@@ -5,21 +5,6 @@ variable "cluster_name" {
   type        = string
 }
 
-variable "s3_bucket" {
-  description = "S3 bucket name for user data"
-  type        = string
-}
-
-variable "kms_key_id" {
-  description = "KMS key ID for encryption"
-  type        = string
-}
-
-variable "oidc_provider_arn" {
-  description = "ARN of the OIDC provider for IRSA"
-  type        = string
-}
-
 # AWS Auth ConfigMap variables
 variable "node_role_arn" {
   description = "IAM role ARN for EKS nodes (required for nodes to join cluster)"
