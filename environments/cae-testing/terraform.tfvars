@@ -98,9 +98,11 @@ dask_cluster_max_cores = 10
 singleuser_image_name = "ghcr.io/nmfs-opensci/py-rocket-base"
 singleuser_image_tag  = "latest"
 
-# Lifecycle Hooks - Disabled for faster testing
-lifecycle_hooks_enabled      = false
-lifecycle_post_start_command = []
+# Lifecycle Hooks - Fix VSCode Jupyter kernel path
+# py-rocket-base uses /srv/conda/bin/python but ipykernel is in /srv/conda/envs/notebook
+# Installing ipykernel in base conda makes VSCode Jupyter notebooks work
+lifecycle_hooks_enabled      = true
+lifecycle_post_start_command = ["sh", "-c", "/srv/conda/bin/pip install ipykernel"]
 
 # Idle Timeouts - Very aggressive for testing
 kernel_cull_timeout = 300 # 5 minutes
