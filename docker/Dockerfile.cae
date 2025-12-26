@@ -49,22 +49,26 @@ RUN pixi run python -c "import climakitae; print('climakitae OK')" && \
     pixi run python -c "import xarray; print('xarray OK')" && \
     pixi run python -c "import dask; print('dask OK')"
 
-# Switch to notebook user for user-specific configuration
-USER ${NB_USER}
-WORKDIR /home/${NB_USER}
-
-# Register the CAE kernel explicitly
+# Register the CAE kernel system-wide (not --user, so JupyterHub can see it)
+# This installs to /usr/local/share/jupyter/kernels/cae
 RUN /srv/conda/envs/cae/bin/python -m ipykernel install \
-    --user \
     --name cae \
     --display-name "Python [cae]"
 
-# Set CAE as the default kernel for new notebooks
+# Set CAE as the default kernel for JupyterLab
 ENV JUPYTER_DEFAULT_KERNEL=cae
 
-# Configure JupyterLab to default to cae kernel
-RUN mkdir -p ~/.jupyter && \
-    echo 'c.MultiKernelManager.default_kernel_name = "cae"' >> ~/.jupyter/jupyter_lab_config.py
+# Configure VSCode to use CAE Python as default
+RUN mkdir -p /etc/skel/.local/share/code-server/User && \
+    echo '{"python.defaultInterpreterPath": "/srv/conda/envs/cae/bin/python", "jupyter.jupyterServerType": "local"}' \
+    > /etc/skel/.local/share/code-server/User/settings.json
+
+# Also set for jovyan user directly (in case /etc/skel isn't used)
+USER ${NB_USER}
+WORKDIR /home/${NB_USER}
+RUN mkdir -p ~/.local/share/code-server/User && \
+    echo '{"python.defaultInterpreterPath": "/srv/conda/envs/cae/bin/python", "jupyter.jupyterServerType": "local"}' \
+    > ~/.local/share/code-server/User/settings.json
 
 # Add labels for tracking
 LABEL maintainer="CAE Team"
