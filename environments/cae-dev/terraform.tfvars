@@ -105,12 +105,13 @@ dask_cluster_max_cores = 20
 singleuser_image_name = "ghcr.io/nmfs-opensci/py-rocket-base"
 singleuser_image_tag  = "latest"
 
-# Lifecycle Hooks - Install ipykernel (VSCode Jupyter fix) + climakitae
+# Lifecycle Hooks - Install ipykernel (VSCode Jupyter fix) + climakitae + dependencies
 # ipykernel in base conda fixes: "Error: /srv/conda/bin/python: No module named ipykernel_launcher"
+# boto3/botocore/s3fs are climakitae dependencies not in py-rocket-base
 lifecycle_hooks_enabled = true
 lifecycle_post_start_command = [
   "sh", "-c",
-  "/srv/conda/bin/pip install ipykernel; /srv/conda/envs/notebook/bin/pip install --no-deps -e git+https://github.com/cal-adapt/climakitae.git#egg=climakitae -e git+https://github.com/cal-adapt/climakitaegui.git#egg=climakitaegui; /srv/conda/envs/notebook/bin/gitpuller https://github.com/cal-adapt/cae-notebooks main cae-notebooks || true"
+  "/srv/conda/bin/pip install ipykernel && /srv/conda/envs/notebook/bin/pip install boto3 botocore s3fs && /srv/conda/envs/notebook/bin/pip install --no-deps git+https://github.com/cal-adapt/climakitae.git git+https://github.com/cal-adapt/climakitaegui.git && /srv/conda/envs/notebook/bin/gitpuller https://github.com/cal-adapt/cae-notebooks main cae-notebooks || true"
 ]
 
 # Idle Timeouts - Aggressive for dev
