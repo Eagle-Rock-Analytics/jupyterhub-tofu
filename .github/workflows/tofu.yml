@@ -28,7 +28,7 @@ on:
         options:
           - cae-testing
           - cae-dev
-          - cae
+          # - cae  # Disabled until AWS_ROLE_ARN is configured
       action:
         description: 'Action to perform'
         required: true
@@ -89,6 +89,9 @@ jobs:
                 CHANGED="cae-dev"
               fi
             fi
+
+            # Filter out disabled environments (cae not ready yet)
+            CHANGED=$(echo "$CHANGED" | tr ',' '\n' | grep -v '^cae$' | tr '\n' ',' | sed 's/,$//')
 
             echo "environments=$CHANGED" >> $GITHUB_OUTPUT
           fi
