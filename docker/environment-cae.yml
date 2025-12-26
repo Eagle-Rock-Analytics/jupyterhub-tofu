@@ -110,8 +110,7 @@ dependencies:
   - esmpy
   - metpy
   - rechunker
-  - xclim
-  - xsdba  # required by climakitae (xclim.sdba was split out)
+  - xclim<0.54  # pin to version before sdba split (climakitae not yet updated)
   - xesmf
   - xgcm
 
