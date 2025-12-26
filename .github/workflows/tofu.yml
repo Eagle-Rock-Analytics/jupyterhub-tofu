@@ -140,6 +140,7 @@ jobs:
       - name: Plan
         id: plan
         run: |
+          set -o pipefail
           make plan ENVIRONMENT=${{ matrix.environment }} 2>&1 | tee plan_output.txt
         continue-on-error: true
 

@@ -450,33 +450,34 @@ resource "aws_iam_role_policy" "kubecost" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = concat([
-      {
-        Sid    = "CostExplorerAccess"
-        Effect = "Allow"
-        Action = [
-          "ce:GetCostAndUsage",
-          "ce:GetCostForecast",
-          "ce:GetReservationUtilization",
-          "ce:GetSavingsPlansUtilization",
-          "pricing:GetProducts"
-        ]
-        Resource = "*"
-      },
-      {
-        Sid    = "EC2DescribeForInventory"
-        Effect = "Allow"
-        Action = [
-          "ec2:DescribeInstances",
-          "ec2:DescribeVolumes",
-          "ec2:DescribeRegions"
-        ]
-        Resource = "*"
-      }
-    ],
-    # CUR bucket access - only if CUR is enabled (bucket exists)
-    local.cur_bucket_name != "" ? [
-      {
+    Statement = flatten([
+      [
+        {
+          Sid    = "CostExplorerAccess"
+          Effect = "Allow"
+          Action = [
+            "ce:GetCostAndUsage",
+            "ce:GetCostForecast",
+            "ce:GetReservationUtilization",
+            "ce:GetSavingsPlansUtilization",
+            "pricing:GetProducts"
+          ]
+          Resource = "*"
+        },
+        {
+          Sid    = "EC2DescribeForInventory"
+          Effect = "Allow"
+          Action = [
+            "ec2:DescribeInstances",
+            "ec2:DescribeVolumes",
+            "ec2:DescribeRegions"
+          ]
+          Resource = "*"
+        }
+      ],
+      # CUR bucket access - only if CUR is enabled (bucket exists)
+      # Using for expression to ensure consistent types when condition is false
+      [for bucket in (local.cur_bucket_name != "" ? [local.cur_bucket_name] : []) : {
         Sid    = "CURBucketAccess"
         Effect = "Allow"
         Action = [
@@ -484,11 +485,11 @@ resource "aws_iam_role_policy" "kubecost" {
           "s3:ListBucket"
         ]
         Resource = [
-          "arn:aws:s3:::${local.cur_bucket_name}",
-          "arn:aws:s3:::${local.cur_bucket_name}/*"
+          "arn:aws:s3:::${bucket}",
+          "arn:aws:s3:::${bucket}/*"
         ]
-      },
-      {
+      }],
+      [for _ in (local.cur_bucket_name != "" ? [1] : []) : {
         Sid    = "AthenaQueryAccess"
         Effect = "Allow"
         Action = [
@@ -497,8 +498,8 @@ resource "aws_iam_role_policy" "kubecost" {
           "athena:GetQueryResults"
         ]
         Resource = "*"
-      },
-      {
+      }],
+      [for _ in (local.cur_bucket_name != "" ? [1] : []) : {
         Sid    = "GlueCatalogAccess"
         Effect = "Allow"
         Action = [
@@ -507,8 +508,8 @@ resource "aws_iam_role_policy" "kubecost" {
           "glue:GetPartitions"
         ]
         Resource = "*"
-      }
-    ] : [])
+      }]
+    ])
   })
 }
 
