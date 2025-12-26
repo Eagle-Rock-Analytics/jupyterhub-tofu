@@ -1,0 +1,234 @@
+name: OpenTofu CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '*.tf'
+      - 'modules/**'
+      - 'environments/**'
+      - '.github/workflows/tofu.yml'
+      - 'Makefile'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '*.tf'
+      - 'modules/**'
+      - 'environments/**'
+      - 'Makefile'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'cae-dev'
+        type: choice
+        options:
+          - cae-dev
+          - cae
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'plan'
+        type: choice
+        options:
+          - plan
+          - apply
+
+env:
+  TOFU_VERSION: '1.6.0'
+  AWS_REGION: 'us-west-2'
+
+permissions:
+  id-token: write   # Required for OIDC
+  contents: read
+  pull-requests: write  # For PR comments
+
+jobs:
+  # Determine which environments changed
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      environments: ${{ steps.changes.outputs.environments }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed environments
+        id: changes
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "environments=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          else
+            # Get the base commit for comparison
+            if [ "${{ github.event_name }}" == "pull_request" ]; then
+              BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            else
+              BASE_SHA="${{ github.event.before }}"
+            fi
+
+            # Check which environment files changed
+            CHANGED=$(git diff --name-only "$BASE_SHA" "${{ github.sha }}" | \
+              grep -E '^environments/[^/]+/' | \
+              sed 's|environments/||' | \
+              cut -d/ -f1 | \
+              sort -u | \
+              tr '\n' ',' | \
+              sed 's/,$//' || true)
+
+            # If no specific env changed but core files did, run on cae-dev
+            if [ -z "$CHANGED" ]; then
+              CORE_CHANGED=$(git diff --name-only "$BASE_SHA" "${{ github.sha }}" | \
+                grep -E '^(main\.tf|variables\.tf|outputs\.tf|modules/|Makefile)' | wc -l)
+              if [ "$CORE_CHANGED" -gt 0 ]; then
+                CHANGED="cae-dev"
+              fi
+            fi
+
+            echo "environments=$CHANGED" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create matrix
+        id: matrix
+        run: |
+          ENVS="${{ steps.changes.outputs.environments }}"
+          if [ -n "$ENVS" ]; then
+            MATRIX=$(echo "$ENVS" | tr ',' '\n' | jq -R . | jq -s '{environment: .}')
+            echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          else
+            echo "matrix={\"environment\":[]}" >> $GITHUB_OUTPUT
+          fi
+
+  # Run OpenTofu plan via Makefile
+  plan:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.environments != ''
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
+      fail-fast: false
+    environment: ${{ matrix.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: ${{ env.TOFU_VERSION }}
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: github-actions-tofu
+
+      - name: Setup SOPS
+        uses: mdgreenwald/mozilla-sops-action@v1.6.0
+
+      - name: Plan
+        id: plan
+        run: |
+          make plan ENVIRONMENT=${{ matrix.environment }} 2>&1 | tee plan_output.txt
+        continue-on-error: true
+
+      - name: Upload plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ matrix.environment }}
+          path: tfplan
+          retention-days: 5
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('plan_output.txt', 'utf8');
+
+            // Truncate if too long for GitHub comment
+            const maxLength = 60000;
+            const truncated = plan.length > maxLength
+              ? plan.slice(0, maxLength) + '\n... (truncated)'
+              : plan;
+
+            const output = `## OpenTofu Plan - \`${{ matrix.environment }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`hcl
+            ${truncated}
+            \`\`\`
+
+            </details>
+
+            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
+
+      - name: Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+  # Apply changes (only on main branch push or manual trigger with apply)
+  apply:
+    needs: [detect-changes, plan]
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply')
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
+      max-parallel: 1  # Apply one environment at a time
+    environment:
+      name: ${{ matrix.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: ${{ env.TOFU_VERSION }}
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: github-actions-tofu
+
+      - name: Setup SOPS
+        uses: mdgreenwald/mozilla-sops-action@v1.6.0
+
+      - name: Download plan
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan-${{ matrix.environment }}
+
+      - name: Initialize and Apply
+        run: |
+          # Use Makefile for init (handles secrets, backend setup)
+          make init ENVIRONMENT=${{ matrix.environment }}
+          # Apply the exact plan from the plan job
+          tofu apply -auto-approve tfplan
+
+      - name: Get outputs
+        id: output
+        run: |
+          echo "## Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          tofu output -json | jq -r 'to_entries[] | "- **\(.key)**: \(.value.value)"' >> $GITHUB_STEP_SUMMARY 2>/dev/null || true

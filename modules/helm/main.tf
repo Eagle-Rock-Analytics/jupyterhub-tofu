@@ -204,6 +204,16 @@ resource "helm_release" "daskhub" {
               authenticator_class = var.github_enabled ? "github" : (var.cognito_enabled ? "generic-oauth" : "dummy")
             }
           }
+          # JupyterHub Service Proxy - Kubecost integration
+          # Routes /services/kubecost/* to the kubecost-proxy nginx service
+          # which strips the prefix before forwarding to Kubecost
+          services = var.enable_kubecost_service ? {
+            kubecost = {
+              url     = "http://kubecost-proxy.kubecost.svc.cluster.local:9090"
+              display = true
+              admin   = false
+            }
+          } : {}
         }
       }
       # Dask Gateway Configuration

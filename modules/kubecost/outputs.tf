@@ -6,8 +6,13 @@ output "namespace" {
 }
 
 output "service_name" {
-  description = "Kubernetes service name for Kubecost UI"
+  description = "Kubernetes service name for Kubecost UI (direct access)"
   value       = "kubecost-cost-analyzer"
+}
+
+output "proxy_service_name" {
+  description = "Kubernetes service name for nginx proxy (for JupyterHub integration)"
+  value       = var.enable_jupyterhub_proxy ? kubernetes_service.kubecost_proxy[0].metadata[0].name : null
 }
 
 output "service_port" {

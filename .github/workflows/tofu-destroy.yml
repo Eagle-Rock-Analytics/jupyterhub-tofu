@@ -1,0 +1,103 @@
+name: OpenTofu Destroy
+
+# This workflow is intentionally separate from the main CI/CD workflow
+# for safety. It requires manual trigger AND confirmation.
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to destroy (production environments excluded)'
+        required: true
+        type: choice
+        options:
+          - cae-dev
+      confirm:
+        description: 'Type the environment name to confirm destruction'
+        required: true
+        type: string
+
+env:
+  TOFU_VERSION: '1.6.0'
+  AWS_REGION: 'us-west-2'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  validate-confirmation:
+    runs-on: ubuntu-latest
+    outputs:
+      confirmed: ${{ steps.check.outputs.confirmed }}
+    steps:
+      - name: Validate confirmation
+        id: check
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" == "${{ github.event.inputs.environment }}" ]; then
+            echo "confirmed=true" >> $GITHUB_OUTPUT
+            echo "Confirmation validated for environment: ${{ github.event.inputs.environment }}"
+          else
+            echo "confirmed=false" >> $GITHUB_OUTPUT
+            echo "::error::Confirmation failed. You entered '${{ github.event.inputs.confirm }}' but environment is '${{ github.event.inputs.environment }}'"
+            exit 1
+          fi
+
+  destroy:
+    needs: validate-confirmation
+    if: needs.validate-confirmation.outputs.confirmed == 'true'
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: ${{ env.TOFU_VERSION }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: github-actions-tofu-destroy
+
+      - name: Setup SOPS
+        uses: mdgreenwald/mozilla-sops-action@v1.6.0
+
+      - name: Initialize OpenTofu
+        run: |
+          tofu init -backend-config=environments/${{ github.event.inputs.environment }}/backend.tfvars
+
+      - name: Plan Destroy
+        run: |
+          echo "## Destroy Plan" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Planning destruction of environment: ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          tofu plan -destroy \
+            -var-file=environments/${{ github.event.inputs.environment }}/terraform.tfvars \
+            -out=tfplan-destroy \
+            -no-color 2>&1 | tee destroy_plan.txt
+
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          tail -50 destroy_plan.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Destroy
+        run: |
+          echo "Destroying environment: ${{ github.event.inputs.environment }}"
+          tofu apply -auto-approve tfplan-destroy
+
+      - name: Summary
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Destruction Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Environment **${{ github.event.inputs.environment }}** has been destroyed." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Triggered by: @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY

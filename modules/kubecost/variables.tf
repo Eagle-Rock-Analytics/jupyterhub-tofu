@@ -39,3 +39,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "enable_jupyterhub_proxy" {
+  description = "Deploy nginx proxy for JupyterHub service integration (strips /services/kubecost prefix)"
+  type        = bool
+  default     = true
+}

@@ -288,7 +288,7 @@ check-env: ## Check environment setup
 	@aws sts get-caller-identity >/dev/null 2>&1 || { echo -e "$(RED)AWS credentials not configured$(NC)"; exit 1; }
 	@echo -e "$(GREEN)Environment check passed$(NC)"
 
-check-secrets: ## Check if secrets.yaml exists and is encrypted
+check-secrets: check-sops-config ## Check if secrets.yaml exists and is encrypted
 	@SECRETS_FILE="environments/$(ENVIRONMENT)/secrets.yaml"; \
 	SECRETS_EXAMPLE="environments/dev/secrets.yaml.example"; \
 	if [ ! -f "$$SECRETS_FILE" ]; then \
@@ -329,6 +329,41 @@ check-secrets: ## Check if secrets.yaml exists and is encrypted
 			echo -e "$(RED)Failed to encrypt $$SECRETS_FILE$(NC)"; \
 			exit 1; \
 		fi; \
+	fi
+
+check-sops-config: ## Ensure SOPS config exists for this environment (creates KMS key if needed)
+	@if ! grep -q "environments/$(ENVIRONMENT)/secrets" .sops.yaml 2>/dev/null; then \
+		echo -e "$(YELLOW)No SOPS config found for environment: $(ENVIRONMENT)$(NC)"; \
+		echo -e "$(GREEN)Creating KMS key and updating .sops.yaml...$(NC)"; \
+		KMS_ALIAS="alias/sops-jupyterhub-$(ENVIRONMENT)"; \
+		REGION=$$(grep '^region' environments/$(ENVIRONMENT)/terraform.tfvars 2>/dev/null | awk '{print $$3}' | tr -d '"' || echo "$(REGION)"); \
+		if aws kms list-aliases --query "Aliases[?AliasName=='$$KMS_ALIAS'].AliasName" --output text --region "$$REGION" | grep -q "$$KMS_ALIAS"; then \
+			echo "KMS alias $$KMS_ALIAS already exists"; \
+		else \
+			echo "Creating new KMS key..."; \
+			KMS_KEY_ID=$$(aws kms create-key \
+				--description "SOPS key for JupyterHub $(ENVIRONMENT)" \
+				--tags TagKey=Environment,TagValue=$(ENVIRONMENT) TagKey=Application,TagValue=jupyterhub \
+				--region "$$REGION" \
+				--query 'KeyMetadata.KeyId' \
+				--output text); \
+			aws kms create-alias \
+				--alias-name "$$KMS_ALIAS" \
+				--target-key-id "$$KMS_KEY_ID" \
+				--region "$$REGION"; \
+			echo -e "$(GREEN)Created KMS key with alias $$KMS_ALIAS$(NC)"; \
+		fi; \
+		KMS_ARN=$$(aws kms describe-key --key-id "$$KMS_ALIAS" --region "$$REGION" --query 'KeyMetadata.Arn' --output text); \
+		echo ""; \
+		echo "Adding SOPS rule for $(ENVIRONMENT) to .sops.yaml..."; \
+		echo "" >> .sops.yaml; \
+		echo "  # $(ENVIRONMENT) environment secrets ($$REGION)" >> .sops.yaml; \
+		echo "  - path_regex: environments/$(ENVIRONMENT)/secrets\\.yaml\$$" >> .sops.yaml; \
+		echo "    kms: $$KMS_ARN" >> .sops.yaml; \
+		echo "    aws_profile: \"\"" >> .sops.yaml; \
+		echo -e "$(GREEN)✓ Updated .sops.yaml with $(ENVIRONMENT) configuration$(NC)"; \
+	else \
+		echo -e "$(GREEN)SOPS config exists for environment: $(ENVIRONMENT)$(NC)"; \
 	fi
 
 install-tools: ## Install required tools

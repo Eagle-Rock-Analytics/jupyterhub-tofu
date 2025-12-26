@@ -6,7 +6,7 @@
 environment  = "cae-dev"
 region       = "us-west-2"
 cluster_name = "jupyterhub"
-domain_name  = "cae-dev.example.com"  # Update with actual dev domain
+domain_name  = "cae-dev.rocktalus.com"
 admin_email  = "refuge@rocktalus.com"
 owner_email  = "refuge@rocktalus.com"
 cost_center  = "cae-dev"
@@ -19,10 +19,10 @@ admin_users = [
 # Kubernetes
 kubernetes_version = "1.31"
 
-# ACM Certificate - Disable for dev (can use HTTP or configure later)
-enable_acm          = false
+# ACM Certificate - Manual DNS validation (no Route53)
+enable_acm          = true
 acm_enable_wildcard = false
-acm_auto_validate   = false
+acm_auto_validate   = false  # Manually add DNS validation records
 
 # Network Configuration
 vpc_cidr                 = "10.6.0.0/16"  # Different CIDR for dev
@@ -104,12 +104,12 @@ existing_s3_bucket_name = ""
 s3_lifecycle_days       = 7   # Short retention for dev
 force_destroy_s3        = true
 
-# Authentication - EXTERNAL COGNITO (same as production for testing)
-# Uses the same Cognito user pool as cae production
+# Authentication - Cognito (us-west-1)
 github_enabled             = false
+github_org_whitelist       = ""
 use_external_cognito       = true
-external_cognito_client_id = "3jesa7vt6hanjscanmj93cj2kg"
-external_cognito_domain    = "cae.auth.us-west-1.amazoncognito.com"
+external_cognito_client_id = "4fumjktp49ajd8tvrf6glevbfr"
+external_cognito_domain    = "cae-dev-hub.auth.us-west-1.amazoncognito.com"
 
 # Cost Optimization
 scale_to_zero        = false
