@@ -11,9 +11,25 @@ admin_email  = "refuge@rocktalus.com"
 owner_email  = "refuge@rocktalus.com"
 cost_center  = "cae-dev"
 
-# Admin Users
+# Admin Users (JupyterHub)
 admin_users = [
   "refuge@rocktalus.com"
+]
+
+# EKS Cluster Access (aws-auth ConfigMap)
+# These IAM identities get cluster admin (system:masters) access
+cluster_admin_roles = [
+  {
+    arn      = "arn:aws:iam::992398409787:role/github-actions-tofu-era"
+    username = "github-actions"
+  }
+]
+
+cluster_admin_users = [
+  {
+    arn      = "arn:aws:iam::992398409787:user/espg"
+    username = "espg"
+  }
 ]
 
 # Kubernetes

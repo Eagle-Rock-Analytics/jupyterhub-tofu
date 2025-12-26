@@ -81,13 +81,13 @@ jobs:
               tr '\n' ',' | \
               sed 's/,$//' || true)
 
-            # If no specific env changed but core files did, run on cae-dev
-            if [ -z "$CHANGED" ]; then
-              CORE_CHANGED=$(git diff --name-only "$BASE_SHA" "${{ github.sha }}" | \
-                grep -E '^(main\.tf|variables\.tf|outputs\.tf|modules/|Makefile)' | wc -l)
-              if [ "$CORE_CHANGED" -gt 0 ]; then
-                CHANGED="cae-dev"
-              fi
+            # If core files changed, run ALL environments (they all depend on core files)
+            CORE_CHANGED=$(git diff --name-only "$BASE_SHA" "${{ github.sha }}" | \
+              grep -E '^(main\.tf|variables\.tf|outputs\.tf|modules/|Makefile)' | wc -l)
+            if [ "$CORE_CHANGED" -gt 0 ]; then
+              # List all environments from environments/ directory
+              ALL_ENVS=$(ls -d environments/*/ 2>/dev/null | xargs -n1 basename | tr '\n' ',' | sed 's/,$//')
+              CHANGED="$ALL_ENVS"
             fi
 
             # Filter out disabled environments (cae not ready yet)

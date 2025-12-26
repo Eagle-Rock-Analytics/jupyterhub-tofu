@@ -509,6 +509,25 @@ variable "admin_users" {
   default     = []
 }
 
+# EKS Cluster Access (aws-auth ConfigMap)
+variable "cluster_admin_roles" {
+  description = "IAM roles to grant cluster admin access (e.g., GitHub Actions role)"
+  type = list(object({
+    arn      = string # Full IAM role ARN
+    username = string # Kubernetes username for this role
+  }))
+  default = []
+}
+
+variable "cluster_admin_users" {
+  description = "IAM users to grant cluster admin access"
+  type = list(object({
+    arn      = string # Full IAM user ARN
+    username = string # Kubernetes username for this user
+  }))
+  default = []
+}
+
 # Custom Image Selection
 variable "enable_custom_image_selection" {
   description = "Allow users to specify custom Docker images at login (unlisted_choice)"

@@ -16,6 +16,21 @@ admin_users = [
   "admin"
 ]
 
+# EKS Cluster Access (aws-auth ConfigMap)
+cluster_admin_roles = [
+  {
+    arn      = "arn:aws:iam::992398409787:role/github-actions-tofu-era"
+    username = "github-actions"
+  }
+]
+
+cluster_admin_users = [
+  {
+    arn      = "arn:aws:iam::992398409787:user/espg"
+    username = "espg"
+  }
+]
+
 # Kubernetes
 kubernetes_version = "1.31"
 

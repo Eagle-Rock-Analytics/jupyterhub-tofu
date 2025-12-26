@@ -263,6 +263,11 @@ module "kubernetes" {
   kms_key_id        = module.kms.key_id
   oidc_provider_arn = module.eks.oidc_provider_arn
 
+  # AWS Auth - grant cluster access to IAM roles/users
+  node_role_arn       = module.eks.node_iam_role_arn
+  cluster_admin_roles = var.cluster_admin_roles
+  cluster_admin_users = var.cluster_admin_users
+
   depends_on = [module.eks]
 }
 

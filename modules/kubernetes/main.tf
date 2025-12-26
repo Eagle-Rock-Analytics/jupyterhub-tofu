@@ -1,6 +1,53 @@
 # Kubernetes Module - Service Accounts and RBAC
 # Creates service accounts for JupyterHub users with S3 access
 
+# =============================================================================
+# AWS Auth ConfigMap - Grants IAM roles/users access to the EKS cluster
+# =============================================================================
+# The aws-auth ConfigMap maps IAM identities to Kubernetes RBAC permissions.
+# Node roles are added automatically by EKS; we add admin roles/users here.
+
+locals {
+  # Build mapRoles YAML - node role + additional admin roles
+  map_roles = yamlencode(concat(
+    # Node role (required for nodes to join cluster)
+    [{
+      rolearn  = var.node_role_arn
+      username = "system:node:{{EC2PrivateDNSName}}"
+      groups   = ["system:bootstrappers", "system:nodes"]
+    }],
+    # Additional admin roles (e.g., GitHub Actions role)
+    [for role in var.cluster_admin_roles : {
+      rolearn  = role.arn
+      username = role.username
+      groups   = ["system:masters"]
+    }]
+  ))
+
+  # Build mapUsers YAML - admin users
+  map_users = length(var.cluster_admin_users) > 0 ? yamlencode([
+    for user in var.cluster_admin_users : {
+      userarn  = user.arn
+      username = user.username
+      groups   = ["system:masters"]
+    }
+  ]) : ""
+}
+
+resource "kubernetes_config_map_v1_data" "aws_auth" {
+  metadata {
+    name      = "aws-auth"
+    namespace = "kube-system"
+  }
+
+  data = merge(
+    { mapRoles = local.map_roles },
+    length(var.cluster_admin_users) > 0 ? { mapUsers = local.map_users } : {}
+  )
+
+  force = true # Overwrite existing data
+}
+
 # GP3 Storage Class (default)
 # Benefits: 20% cheaper than gp2, 3000 IOPS baseline regardless of size
 resource "kubernetes_storage_class_v1" "gp3" {
