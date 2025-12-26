@@ -55,10 +55,24 @@ RUN /srv/conda/envs/cae/bin/python -m ipykernel install \
     --name cae \
     --display-name "Python [cae]"
 
-# Set CAE as the default kernel for JupyterLab
+# =============================================================================
+# Set CAE as the DEFAULT kernel for new notebooks
+# =============================================================================
+
+# Solution 1: JupyterLab overrides.json - sets default for JupyterLab UI
+RUN mkdir -p /usr/local/share/jupyter/lab/settings && \
+    echo '{"@jupyterlab/notebook-extension:tracker": {"kernelName": "cae"}}' \
+    > /usr/local/share/jupyter/lab/settings/overrides.json
+
+# Solution 3: Jupyter server config - sets default at server level (affects all frontends)
+RUN mkdir -p /etc/jupyter && \
+    echo "c.MappingKernelManager.default_kernel_name = 'cae'" \
+    >> /etc/jupyter/jupyter_server_config.py
+
+# Keep env var as additional hint (some tools check this)
 ENV JUPYTER_DEFAULT_KERNEL=cae
 
-# Configure VSCode to use CAE Python as default
+# Configure VSCode to use CAE Python as default interpreter for .py files
 RUN mkdir -p /etc/skel/.local/share/code-server/User && \
     echo '{"python.defaultInterpreterPath": "/srv/conda/envs/cae/bin/python", "jupyter.jupyterServerType": "local"}' \
     > /etc/skel/.local/share/code-server/User/settings.json
