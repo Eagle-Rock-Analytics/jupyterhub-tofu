@@ -26,6 +26,7 @@ on:
         default: 'cae-dev'
         type: choice
         options:
+          - cae-testing
           - cae-dev
           - cae
       action:

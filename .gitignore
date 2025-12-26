@@ -64,4 +64,4 @@ import-secrets.enc.yaml
 /backend.tfvars
 
 # Import-generated tfvars
-import-*.tfvars
+import-*.tfvarstfplan
