@@ -218,6 +218,7 @@ module "eks" {
   system_node_desired_size     = var.system_node_desired_size
   system_node_max_size         = var.system_node_max_size
   system_enable_spot_instances = var.system_enable_spot_instances
+  system_node_disk_size        = var.system_node_disk_size
 
   # User node group (3-node architecture)
   user_node_instance_types   = var.user_node_instance_types
@@ -226,6 +227,7 @@ module "eks" {
   user_node_desired_size     = var.user_node_desired_size
   user_node_max_size         = var.user_node_max_size
   user_enable_spot_instances = var.user_enable_spot_instances
+  user_node_disk_size        = var.user_node_disk_size
 
   # User node scheduled scaling
   enable_user_node_scheduling              = var.enable_user_node_scheduling
@@ -248,6 +250,7 @@ module "eks" {
   dask_node_desired_size     = local.dask_node_config.desired_size
   dask_node_max_size         = local.dask_node_config.max_size
   dask_enable_spot_instances = var.dask_enable_spot_instances
+  dask_node_disk_size        = var.dask_node_disk_size
 
   tags = local.common_tags
 

@@ -379,6 +379,7 @@ resource "aws_eks_node_group" "system" {
   instance_types = var.system_node_instance_types
   capacity_type  = var.system_enable_spot_instances ? "SPOT" : "ON_DEMAND"
   ami_type       = "AL2023_x86_64_STANDARD"
+  disk_size      = var.system_node_disk_size
 
   scaling_config {
     desired_size = var.system_node_desired_size
@@ -431,6 +432,7 @@ resource "aws_eks_node_group" "user_small" {
   instance_types = ["r5.large"] # Small profile: 2 vCPU, 16 GiB
   capacity_type  = var.user_enable_spot_instances ? "SPOT" : "ON_DEMAND"
   ami_type       = "AL2023_x86_64_STANDARD"
+  disk_size      = var.user_node_disk_size
 
   scaling_config {
     desired_size = var.user_node_desired_size
@@ -478,6 +480,7 @@ resource "aws_eks_node_group" "user_medium" {
   instance_types = ["r5.xlarge"] # Medium profile: 4 vCPU, 32 GiB
   capacity_type  = var.user_enable_spot_instances ? "SPOT" : "ON_DEMAND"
   ami_type       = "AL2023_x86_64_STANDARD"
+  disk_size      = var.user_node_disk_size
 
   scaling_config {
     desired_size = var.user_node_desired_size
@@ -521,7 +524,7 @@ resource "aws_launch_template" "dask_workers" {
     device_name = "/dev/xvda"
 
     ebs {
-      volume_size = 50 # Smaller root volume since we have NVMe
+      volume_size = var.dask_node_disk_size
       volume_type = "gp3"
       encrypted   = true
     }

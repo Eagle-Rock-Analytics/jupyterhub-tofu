@@ -49,12 +49,13 @@ pin_user_nodes_single_az = true
 # Node Group Architecture - 3-node (system, user, dask)
 use_three_node_groups = true
 
-# Node Group - System (Always Running) - Minimal for testing
-system_node_instance_types   = ["t3.medium"]
+# Node Group - System (Always Running) - m5.large for adequate pod capacity
+system_node_instance_types   = ["m5.large"]
 system_node_min_size         = 1
 system_node_desired_size     = 1
 system_node_max_size         = 1
 system_enable_spot_instances = false
+system_node_disk_size        = 50
 
 # Node Group - User - Minimal for testing
 user_node_instance_types   = ["t3.large"]

@@ -134,6 +134,24 @@ variable "system_enable_spot_instances" {
   default     = false
 }
 
+variable "system_node_disk_size" {
+  description = "Disk size in GB for system nodes"
+  type        = number
+  default     = 50
+}
+
+variable "user_node_disk_size" {
+  description = "Disk size in GB for user nodes"
+  type        = number
+  default     = 100
+}
+
+variable "dask_node_disk_size" {
+  description = "Disk size in GB for dask worker nodes"
+  type        = number
+  default     = 50
+}
+
 variable "user_node_instance_types" {
   description = "Instance types for user node group"
   type        = list(string)

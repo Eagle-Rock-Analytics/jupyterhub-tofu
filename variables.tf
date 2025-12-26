@@ -145,6 +145,24 @@ variable "system_enable_spot_instances" {
   default     = false
 }
 
+variable "system_node_disk_size" {
+  description = "Disk size in GB for system nodes (needs space for container images)"
+  type        = number
+  default     = 50
+}
+
+variable "user_node_disk_size" {
+  description = "Disk size in GB for user nodes"
+  type        = number
+  default     = 100
+}
+
+variable "dask_node_disk_size" {
+  description = "Disk size in GB for dask worker nodes"
+  type        = number
+  default     = 50
+}
+
 # Node Group Configuration - User Pods (Scale to Zero)
 # For environments using 3-node-group architecture
 variable "user_node_instance_types" {
