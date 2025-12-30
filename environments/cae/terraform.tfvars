@@ -18,7 +18,12 @@ admin_users = [
 
 # EKS Cluster Access
 cluster_admin_roles = []
-cluster_admin_users = []
+cluster_admin_users = [
+  {
+    arn      = "arn:aws:iam::390197508439:user/neil.AE"
+    username = "neil.AE"
+  }
+]
 
 # Kubernetes
 kubernetes_version = "1.34"

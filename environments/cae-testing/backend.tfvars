@@ -1,8 +1,8 @@
 # Terraform Backend Configuration - CAE Testing Environment
 # Will be created automatically by: make init ENVIRONMENT=cae-testing
-# Account: 992398409787
+# Account: 390197508439
 
-bucket         = "tofu-state-jupyterhub-cae-testing-usw2-992398409787"
+bucket         = "tofu-state-jupyterhub-cae-testing-usw2-390197508439"
 key            = "terraform.tfstate"
 region         = "us-west-2"
 encrypt        = true

@@ -1,6 +1,6 @@
 # CAE JupyterHub - Testing Environment
 # Ephemeral testing environment with dummy auth
-# Account: 992398409787
+# Account: 390197508439
 
 # Core Settings
 environment  = "cae-testing"
@@ -24,8 +24,8 @@ cluster_admin_roles = []
 
 cluster_admin_users = [
   {
-    arn      = "arn:aws:iam::992398409787:user/espg"
-    username = "espg"
+    arn      = "arn:aws:iam::390197508439:user/neil.AE"
+    username = "neil.AE"
   }
 ]
 
