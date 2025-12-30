@@ -163,6 +163,12 @@ resource "helm_release" "daskhub" {
   namespace        = "daskhub"
   create_namespace = false # Namespace created by kubernetes module
   timeout          = 1200 # 20 minutes - needed for pre-pulling large container images
+  
+  # Better error handling
+  wait             = true
+  wait_for_jobs    = true
+  atomic           = false  # Don't auto-rollback on failure so we can debug
+  cleanup_on_fail  = false  # Keep failed release for debugging
 
   # JupyterHub Configuration
   values = [
