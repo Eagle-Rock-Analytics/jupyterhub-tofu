@@ -33,7 +33,7 @@ cluster_admin_users = [
 ]
 
 # Kubernetes
-kubernetes_version = "1.31"
+kubernetes_version = "1.34"
 
 # ACM Certificate - Manual DNS validation (no Route53)
 enable_acm          = true

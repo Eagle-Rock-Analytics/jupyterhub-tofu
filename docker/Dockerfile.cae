@@ -25,9 +25,9 @@ RUN curl -fsSL https://github.com/prefix-dev/pixi/releases/latest/download/pixi-
     | tar -xz -C /usr/local/bin && \
     pixi --version
 
-# Install nb_conda_kernels so conda environments appear as Jupyter kernels
-RUN mamba install -y -c conda-forge nb_conda_kernels && \
-    mamba clean --all -f -y
+# NOTE: We do NOT install nb_conda_kernels
+# It auto-discovers ALL conda environments as kernels, which causes confusion
+# Instead, we explicitly register only the kernels we want
 
 # Copy environment file and create pixi project
 COPY environment-cae.yml /tmp/environment-cae.yml
@@ -49,36 +49,49 @@ RUN pixi run python -c "import climakitae; print('climakitae OK')" && \
     pixi run python -c "import xarray; print('xarray OK')" && \
     pixi run python -c "import dask; print('dask OK')"
 
-# Register the CAE kernel system-wide (not --user, so JupyterHub can see it)
-# This installs to /usr/local/share/jupyter/kernels/cae
-RUN /srv/conda/envs/cae/bin/python -m ipykernel install \
-    --name cae \
-    --display-name "Python [cae]"
+# =============================================================================
+# REMOVE ALL EXISTING KERNELS - Start fresh
+# =============================================================================
+# The base image has multiple kernels that interfere with our default
+# Remove them all, then register ONLY what we want
+RUN rm -rf /usr/local/share/jupyter/kernels/* \
+           /usr/share/jupyter/kernels/* \
+           /opt/conda/share/jupyter/kernels/* \
+           /srv/conda/share/jupyter/kernels/* \
+    2>/dev/null || true
 
-# ALSO register as "python3" to handle existing notebooks
-# Existing .ipynb files have metadata like {"kernelspec": {"name": "python3"}}
-# Without this, opening old notebooks would try to use a different kernel
-# This overwrites the base image's python3 kernel with our cae environment
+# Register the CAE kernel as THE system default kernel
+# Install as "python3" so it's the default for ALL notebooks (new and existing)
+# This is the ONLY kernel that will be available
 RUN /srv/conda/envs/cae/bin/python -m ipykernel install \
     --name python3 \
     --display-name "Python 3 (ipykernel)"
 
+# Also register as "cae" for explicit selection (both point to same environment)
+RUN /srv/conda/envs/cae/bin/python -m ipykernel install \
+    --name cae \
+    --display-name "Python [cae]"
+
+# Verify only our kernels exist
+RUN echo "=== Installed kernels ===" && \
+    jupyter kernelspec list
+
 # =============================================================================
-# Set CAE as the DEFAULT kernel for new notebooks
+# Set python3 (which IS the cae env) as the DEFAULT kernel
 # =============================================================================
 
-# Solution 1: JupyterLab overrides.json - sets default for JupyterLab UI
+# JupyterLab overrides.json - sets default for JupyterLab UI
 RUN mkdir -p /usr/local/share/jupyter/lab/settings && \
-    echo '{"@jupyterlab/notebook-extension:tracker": {"kernelName": "cae"}}' \
+    echo '{"@jupyterlab/notebook-extension:tracker": {"kernelName": "python3"}}' \
     > /usr/local/share/jupyter/lab/settings/overrides.json
 
-# Solution 3: Jupyter server config - sets default at server level (affects all frontends)
+# Jupyter server config - sets default at server level (affects all frontends)
 RUN mkdir -p /etc/jupyter && \
-    echo "c.MappingKernelManager.default_kernel_name = 'cae'" \
+    echo "c.MappingKernelManager.default_kernel_name = 'python3'" \
     >> /etc/jupyter/jupyter_server_config.py
 
 # Keep env var as additional hint (some tools check this)
-ENV JUPYTER_DEFAULT_KERNEL=cae
+ENV JUPYTER_DEFAULT_KERNEL=python3
 
 # Configure VSCode to use CAE Python as default interpreter for .py files
 RUN mkdir -p /etc/skel/.local/share/code-server/User && \

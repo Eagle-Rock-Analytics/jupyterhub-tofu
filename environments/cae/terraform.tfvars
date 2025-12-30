@@ -23,7 +23,7 @@ admin_users = [
 ]
 
 # Kubernetes
-kubernetes_version = "1.31"
+kubernetes_version = "1.34"
 
 # ACM Certificate
 enable_acm          = true
