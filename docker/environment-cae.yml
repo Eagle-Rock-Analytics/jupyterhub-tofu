@@ -20,6 +20,7 @@ dependencies:
   # =============================================================================
   # Jupyter ecosystem
   # =============================================================================
+  - jupyterhub  # Required for jupyterhub-singleuser command
   - jupyter-book
   - jupyter-resource-usage
   - jupyter_scheduler
