@@ -85,6 +85,20 @@ locals {
 
   cluster_name = "${var.cluster_name}-${var.environment}"
 
+  # ECR Pull-Through Cache: Transform ghcr.io images to use regional ECR cache
+  # ghcr.io/espg/cae-notebook -> <account>.dkr.ecr.<region>.amazonaws.com/ghcr/espg/cae-notebook
+  ecr_registry_url = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.region}.amazonaws.com"
+
+  # Only transform if: cache enabled AND image is from ghcr.io
+  use_cached_image = var.use_ecr_pull_through_cache && startswith(var.singleuser_image_name, "ghcr.io/")
+
+  # Resolved image name (either cached ECR path or original)
+  resolved_image_name = local.use_cached_image ? replace(
+    var.singleuser_image_name,
+    "ghcr.io/",
+    "${local.ecr_registry_url}/ghcr/"
+  ) : var.singleuser_image_name
+
   # Extract secrets
   cognito_client_secret = try(data.sops_file.secrets.data["cognito.client_secret"], "")
   github_token          = try(data.sops_file.secrets.data["github.token"], "")
@@ -135,6 +149,23 @@ locals {
 data "aws_caller_identity" "current" {}
 data "aws_availability_zones" "available" {
   state = "available"
+}
+
+# =============================================================================
+# ECR Pull-Through Cache for faster image pulls
+# =============================================================================
+# Caches ghcr.io images in regional ECR, reducing pull time from ~3min to ~30sec
+# The cache rule is account-wide; if it already exists, this is a no-op
+resource "aws_ecr_pull_through_cache_rule" "ghcr" {
+  count = local.use_cached_image ? 1 : 0
+
+  ecr_repository_prefix = "ghcr"
+  upstream_registry_url = "ghcr.io"
+
+  # Ignore if rule already exists (created by another environment)
+  lifecycle {
+    ignore_changes = [ecr_repository_prefix, upstream_registry_url]
+  }
 }
 
 # Module: Networking
@@ -306,7 +337,8 @@ module "helm" {
   enable_jupyterhub = var.enable_jupyterhub
 
   # Container image configuration
-  singleuser_image_name = var.singleuser_image_name
+  # Uses ECR pull-through cache when enabled (faster regional pulls)
+  singleuser_image_name = local.resolved_image_name
   singleuser_image_tag  = var.singleuser_image_tag
 
   # Resource limits

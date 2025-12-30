@@ -328,6 +328,12 @@ variable "singleuser_image_tag" {
   default     = "latest"
 }
 
+variable "use_ecr_pull_through_cache" {
+  description = "Use ECR pull-through cache for faster image pulls. Caches ghcr.io images in regional ECR."
+  type        = bool
+  default     = true
+}
+
 # User Resource Limits
 variable "user_cpu_guarantee" {
   description = "CPU cores guaranteed per user"

@@ -94,6 +94,9 @@ dask_cluster_max_cores = 10
 # - ghcr.io/espg/cae-notebook:latest (CAE image with climakitae + pangeo stack)
 # - Pulls cae-notebooks repo on startup via nbgitpuller
 
+# Disable ECR cache for testing - pull directly from ghcr.io for immediate updates
+use_ecr_pull_through_cache = false
+
 # Idle Timeouts - Very aggressive for testing
 kernel_cull_timeout = 300 # 5 minutes
 server_cull_timeout = 600 # 10 minutes
