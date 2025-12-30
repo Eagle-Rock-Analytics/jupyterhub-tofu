@@ -5,3 +5,8 @@
 creation_rules:
   # Rules will be added automatically by 'make init' for each environment
   # The check-sops-config target creates KMS keys and adds rules here
+
+  # cae-dev environment secrets (us-west-2)
+  - path_regex: environments/cae-dev/secrets\.yaml$
+    kms: arn:aws:kms:us-west-2:390197508439:key/4f41b0fa-4bbe-4cdf-843a-d5ca7bc0c338
+    aws_profile: ""
