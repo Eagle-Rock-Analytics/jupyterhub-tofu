@@ -158,6 +158,7 @@ data "aws_availability_zones" "available" {
 # Requires GitHub PAT with read:packages scope stored in Secrets Manager
 
 # Secrets Manager secret for GitHub Container Registry authentication
+# AWS requires secret name to match pattern: ecr-pullthroughcache/*
 resource "aws_secretsmanager_secret" "ghcr_credentials" {
   count = local.use_cached_image && local.github_token != "" ? 1 : 0
 
