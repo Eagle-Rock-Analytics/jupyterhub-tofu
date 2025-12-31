@@ -180,7 +180,6 @@ resource "helm_release" "daskhub" {
         }
       }
       jupyterhub = {
-      jupyterhub = {
         # Singleuser config with profile selection (Small/Medium instance sizes)
         singleuser = local.singleuser_config
         proxy = {
