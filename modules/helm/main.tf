@@ -173,6 +173,13 @@ resource "helm_release" "daskhub" {
   # JupyterHub Configuration
   values = [
     yamlencode({
+      # Disable pre-install hook that can timeout in slow deployments
+      daskhub = {
+        rbac = {
+          enabled = true
+        }
+      }
+      jupyterhub = {
       jupyterhub = {
         # Singleuser config with profile selection (Small/Medium instance sizes)
         singleuser = local.singleuser_config
