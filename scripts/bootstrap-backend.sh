@@ -26,6 +26,9 @@ fi
 # If still not set, use provided argument or default
 REGION=${REGION:-${2:-us-west-2}}
 
+# Convert region to abbreviation (e.g., us-west-2 -> usw2)
+REGION_ABBR=$(echo "${REGION}" | sed 's/-//g' | cut -c1-3)
+
 # Check if backend.tfvars already exists and read from it
 BACKEND_CONFIG="$(dirname "$0")/../environments/${ENV}/backend.tfvars"
 if [ -f "${BACKEND_CONFIG}" ]; then
@@ -34,9 +37,11 @@ if [ -f "${BACKEND_CONFIG}" ]; then
     DYNAMODB_TABLE=$(grep '^dynamodb_table' "${BACKEND_CONFIG}" | awk '{print $3}' | tr -d '"')
     REGION=$(grep '^region' "${BACKEND_CONFIG}" | awk '{print $3}' | tr -d '"')
 else
-    # Use defaults with account ID for global uniqueness
-    BUCKET_NAME="tofu-state-jupyterhub-${ENV}-${ACCOUNT_ID}"
-    DYNAMODB_TABLE="tofu-state-lock-${ENV}"
+    # Use defaults with account ID and region for global uniqueness
+    # Add random suffix to handle bucket name collisions
+    RANDOM_SUFFIX=$(openssl rand -hex 4 2>/dev/null || head -c 4 /dev/urandom | od -An -tx1 | tr -d ' ')
+    BUCKET_NAME="tofu-state-jupyterhub-${ENV}-${REGION_ABBR}-${RANDOM_SUFFIX}-${ACCOUNT_ID}"
+    DYNAMODB_TABLE="tofu-state-lock-${ENV}-${REGION_ABBR}"
 fi
 
 echo -e "${GREEN}Bootstrapping Terraform backend for environment: ${ENV}${NC}"
