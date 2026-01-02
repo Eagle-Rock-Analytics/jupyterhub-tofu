@@ -319,7 +319,7 @@ variable "enable_profile_selection" {
 variable "singleuser_image_name" {
   description = "Docker image name for single user notebooks"
   type        = string
-  default     = "ghcr.io/espg/cae-notebook"
+  default     = "ghcr.io/neilSchroeder/cae-notebook"
 }
 
 variable "singleuser_image_tag" {
