@@ -86,7 +86,7 @@ locals {
   cluster_name = "${var.cluster_name}-${var.environment}"
 
   # ECR Pull-Through Cache: Transform ghcr.io images to use regional ECR cache
-  # ghcr.io/neilSchroeder/cae-notebook -> <account>.dkr.ecr.<region>.amazonaws.com/ghcr/neilSchroeder/cae-notebook
+  # ghcr.io/neilschroeder/cae-notebook -> <account>.dkr.ecr.<region>.amazonaws.com/ghcr/neilschroeder/cae-notebook
   ecr_registry_url = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.region}.amazonaws.com"
 
   # Only transform if: cache enabled AND image is from ghcr.io

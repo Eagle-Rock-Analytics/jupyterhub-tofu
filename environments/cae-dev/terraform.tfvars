@@ -98,7 +98,7 @@ dask_worker_memory_max = 16
 dask_cluster_max_cores = 20
 
 # Container Image & Lifecycle Hooks: Uses defaults from variables.tf
-# - ghcr.io/neilSchroeder/cae-notebook:latest (CAE image with climakitae + pangeo stack)
+# - ghcr.io/neilschroeder/cae-notebook:latest (CAE image with climakitae + pangeo stack)
 # - Pulls cae-notebooks repo on startup via nbgitpuller
 
 # Idle Timeouts - Aggressive for dev

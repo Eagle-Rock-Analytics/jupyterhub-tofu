@@ -865,7 +865,7 @@ resource "aws_eks_access_policy_association" "admin_roles" {
   depends_on = [aws_eks_access_entry.admin_roles]
 }
 
-# Access entries for admin IAM users (e.g., neilSchroeder)
+# Access entries for admin IAM users (e.g., neilschroeder)
 resource "aws_eks_access_entry" "admin_users" {
   for_each = { for idx, user in var.cluster_admin_users : user.arn => user }
 
