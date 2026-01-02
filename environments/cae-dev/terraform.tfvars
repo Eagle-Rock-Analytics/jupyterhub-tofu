@@ -117,7 +117,7 @@ github_enabled             = false
 github_org_whitelist       = ""
 use_external_cognito       = true
 external_cognito_client_id = "3jesa7vt6hanjscanmj93cj2kg"
-external_cognito_domain    = "cae-dev-hub.auth.us-west-1.amazoncognito.com"
+external_cognito_domain    = "cae.auth.us-west-1.amazoncognito.com"
 
 # Cost Optimization
 scale_to_zero        = false
