@@ -28,7 +28,7 @@ on:
         options:
           - cae-testing
           - cae-dev
-          # - cae  # Production: intentionally excluded to prevent accidental deployments
+          - cae  # Production: requires manual workflow_dispatch (excluded from auto-deploy)
       action:
         description: "Action to perform"
         required: true
