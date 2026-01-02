@@ -15,7 +15,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: neilschroeder/cae-notebook
+  IMAGE_NAME: eagle-rock-analytics/cae-notebook
 
 jobs:
   build:
