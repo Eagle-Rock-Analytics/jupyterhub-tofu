@@ -98,7 +98,7 @@ dask_worker_memory_max = 16
 dask_cluster_max_cores = 20
 
 # Container Image & Lifecycle Hooks: Uses defaults from variables.tf
-# - ghcr.io/espg/cae-notebook:latest (CAE image with climakitae + pangeo stack)
+# - ghcr.io/eagle-rock-analytics/cae-notebook:latest (CAE image with climakitae + pangeo stack)
 # - Pulls cae-notebooks repo on startup via nbgitpuller
 
 # Idle Timeouts - Aggressive for dev
@@ -117,7 +117,7 @@ github_enabled             = false
 github_org_whitelist       = ""
 use_external_cognito       = true
 external_cognito_client_id = "3jesa7vt6hanjscanmj93cj2kg"
-external_cognito_domain    = "cae-dev-hub.auth.us-west-1.amazoncognito.com"
+external_cognito_domain    = "cae.auth.us-west-1.amazoncognito.com"
 
 # Cost Optimization
 scale_to_zero        = false
