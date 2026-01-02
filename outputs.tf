@@ -337,7 +337,7 @@ output "route53_dns_record" {
   value = var.manage_route53_dns && var.enable_jupyterhub ? {
     name   = aws_route53_record.jupyterhub[0].name
     type   = aws_route53_record.jupyterhub[0].type
-    value  = aws_route53_record.jupyterhub[0].records[0]
+    value  = one(aws_route53_record.jupyterhub[0].records)
     status = "Managed by OpenTofu - auto-updates on apply"
   } : null
 }
