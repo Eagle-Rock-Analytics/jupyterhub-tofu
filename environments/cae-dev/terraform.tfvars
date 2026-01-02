@@ -116,7 +116,7 @@ force_destroy_s3        = true
 github_enabled             = false
 github_org_whitelist       = ""
 use_external_cognito       = true
-external_cognito_client_id = "4fumjktp49ajd8tvrf6glevbfr"
+external_cognito_client_id = "3jesa7vt6hanjscanmj93cj2kg"
 external_cognito_domain    = "cae-dev-hub.auth.us-west-1.amazoncognito.com"
 
 # Cost Optimization
