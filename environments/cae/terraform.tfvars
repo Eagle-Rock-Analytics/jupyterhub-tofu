@@ -31,7 +31,11 @@ kubernetes_version = "1.34"
 # ACM Certificate
 enable_acm          = true
 acm_enable_wildcard = true  # *.cal-adapt.org
-acm_auto_validate   = false # Manual DNS validation
+acm_auto_validate   = true  # Route53 handles validation automatically
+
+# Route53 DNS Management - auto-creates/updates DNS on apply
+manage_route53_dns = true
+route53_zone_name  = "cal-adapt.org"
 
 # Network Configuration
 vpc_cidr                   = "10.5.0.0/16"

@@ -601,3 +601,16 @@ variable "enable_continuous_image_puller" {
   type        = bool
   default     = true
 }
+
+# Route53 DNS Configuration
+variable "manage_route53_dns" {
+  description = "Automatically create/update Route53 DNS record for the load balancer"
+  type        = bool
+  default     = false
+}
+
+variable "route53_zone_name" {
+  description = "Route53 hosted zone name (e.g., 'cal-adapt.org'). Required if manage_route53_dns is true."
+  type        = string
+  default     = ""
+}

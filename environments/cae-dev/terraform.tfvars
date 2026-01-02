@@ -6,7 +6,7 @@
 environment  = "cae-dev"
 region       = "us-west-2"
 cluster_name = "jupyterhub"
-domain_name  = "cae-dev.rocktalus.com"
+domain_name  = "hub-dev.cal-adapt.org"
 admin_email  = "refuge@rocktalus.com"
 owner_email  = "refuge@rocktalus.com"
 cost_center  = "cae-dev"
@@ -32,10 +32,14 @@ cluster_admin_users = [
 # Kubernetes
 kubernetes_version = "1.34"
 
-# ACM Certificate - Manual DNS validation (no Route53)
+# ACM Certificate
 enable_acm          = true
 acm_enable_wildcard = false
-acm_auto_validate   = false # Manually add DNS validation records
+acm_auto_validate   = true  # Route53 handles validation automatically
+
+# Route53 DNS Management - auto-creates/updates DNS on apply
+manage_route53_dns = true
+route53_zone_name  = "cal-adapt.org"
 
 # Network Configuration
 vpc_cidr                 = "10.6.0.0/16" # Different CIDR for dev

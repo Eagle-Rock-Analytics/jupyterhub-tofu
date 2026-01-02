@@ -724,3 +724,56 @@ module "auto_shutdown" {
 
   depends_on = [module.eks]
 }
+
+# =============================================================================
+# Route53 DNS Management (Optional)
+# =============================================================================
+# Automatically creates/updates DNS record pointing to the load balancer
+# When enabled, destroy/recreate cycles will automatically update DNS
+
+# Look up the Route53 hosted zone
+data "aws_route53_zone" "main" {
+  count = var.manage_route53_dns ? 1 : 0
+  name  = var.route53_zone_name
+}
+
+# Read the proxy-public service to get the load balancer hostname
+data "kubernetes_service" "proxy_public" {
+  count = var.manage_route53_dns && var.enable_jupyterhub ? 1 : 0
+
+  metadata {
+    name      = "proxy-public"
+    namespace = "daskhub"
+  }
+
+  depends_on = [module.helm]
+}
+
+# Create the DNS record pointing to the load balancer
+# Using CNAME instead of Alias to avoid needing to look up NLB zone ID
+resource "aws_route53_record" "jupyterhub" {
+  count = var.manage_route53_dns && var.enable_jupyterhub ? 1 : 0
+
+  zone_id = data.aws_route53_zone.main[0].zone_id
+  name    = var.domain_name
+  type    = "CNAME"
+  ttl     = 300
+  records = [data.kubernetes_service.proxy_public[0].status[0].load_balancer[0].ingress[0].hostname]
+}
+
+# Also create the ACM validation record if using Route53
+resource "aws_route53_record" "acm_validation" {
+  for_each = var.manage_route53_dns && var.enable_acm ? {
+    for dvo in module.acm[0].domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  } : {}
+
+  zone_id = data.aws_route53_zone.main[0].zone_id
+  name    = each.value.name
+  type    = each.value.type
+  ttl     = 60
+  records = [each.value.record]
+}
