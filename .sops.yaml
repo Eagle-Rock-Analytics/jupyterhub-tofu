@@ -20,3 +20,8 @@ creation_rules:
   - path_regex: environments/cae-testing/secrets\.yaml$
     kms: arn:aws:kms:us-west-2:390197508439:key/d5aefee5-1d41-4820-b481-ef3bb76be0ef
     aws_profile: ""
+
+  # cae environment secrets (us-west-2)
+  - path_regex: environments/cae/secrets\.yaml$
+    kms: arn:aws:kms:us-west-2:390197508439:key/46d2fd58-6894-4d4b-9ca6-2ec0cf539b50
+    aws_profile: ""
