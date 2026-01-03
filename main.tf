@@ -42,6 +42,22 @@ provider "aws" {
   }
 }
 
+# Cross-account provider for Route53 (when zone is in different account)
+provider "aws" {
+  alias  = "route53"
+  region = var.region
+
+  default_tags {
+    tags = local.common_tags
+  }
+
+  # Assume role if route53_role_arn is provided (cross-account)
+  assume_role {
+    role_arn     = var.route53_role_arn != "" ? var.route53_role_arn : null
+    session_name = var.route53_role_arn != "" ? "tofu-route53-${var.environment}" : null
+  }
+}
+
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
@@ -730,11 +746,13 @@ module "auto_shutdown" {
 # =============================================================================
 # Automatically creates/updates DNS record pointing to the load balancer
 # When enabled, destroy/recreate cycles will automatically update DNS
+# Supports cross-account Route53 via route53_role_arn variable
 
-# Look up the Route53 hosted zone
+# Look up the Route53 hosted zone (uses cross-account provider)
 data "aws_route53_zone" "main" {
-  count = var.manage_route53_dns ? 1 : 0
-  name  = var.route53_zone_name
+  count    = var.manage_route53_dns ? 1 : 0
+  provider = aws.route53
+  name     = var.route53_zone_name
 }
 
 # Read the proxy-public service to get the load balancer hostname
@@ -752,7 +770,8 @@ data "kubernetes_service" "proxy_public" {
 # Create the DNS record pointing to the load balancer
 # Using CNAME instead of Alias to avoid needing to look up NLB zone ID
 resource "aws_route53_record" "jupyterhub" {
-  count = var.manage_route53_dns && var.enable_jupyterhub ? 1 : 0
+  count    = var.manage_route53_dns && var.enable_jupyterhub ? 1 : 0
+  provider = aws.route53
 
   zone_id = data.aws_route53_zone.main[0].zone_id
   name    = var.domain_name
@@ -770,6 +789,8 @@ resource "aws_route53_record" "acm_validation" {
       type   = dvo.resource_record_type
     }
   } : {}
+
+  provider = aws.route53
 
   zone_id = data.aws_route53_zone.main[0].zone_id
   name    = each.value.name
