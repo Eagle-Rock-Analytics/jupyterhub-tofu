@@ -36,7 +36,7 @@ acm_auto_validate   = true  # Route53 handles validation automatically
 # Route53 DNS Management - auto-creates/updates DNS on apply
 manage_route53_dns = true
 route53_zone_name  = "cal-adapt.org"
-route53_role_arn   = ""  # TODO: Set to arn:aws:iam::<ROUTE53_ACCOUNT>:role/jupyterhub-route53-admin
+route53_role_arn   = "arn:aws:iam::479539604819:role/jupyterhub-route53-admin"
 
 # Network Configuration
 vpc_cidr                   = "10.5.0.0/16"
