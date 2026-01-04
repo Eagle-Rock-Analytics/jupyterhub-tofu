@@ -102,9 +102,11 @@ dask_worker_cores_max  = 4
 dask_worker_memory_max = 16
 dask_cluster_max_cores = 20
 
-# Container Image & Lifecycle Hooks: Uses defaults from variables.tf
-# - ghcr.io/eagle-rock-analytics/cae-notebook:latest (CAE image with climakitae + pangeo stack)
-# - Pulls cae-notebooks repo on startup via nbgitpuller
+# Container Image & Lifecycle Hooks
+# Using new uv-based image with climakitae pre-installed (latest tag auto-updates)
+singleuser_image_name = "ghcr.io/eagle-rock-analytics/cae-notebook"
+singleuser_image_tag  = "2026.01.04"
+# Note: Lifecycle hook now only installs climakitaegui (climakitae is in the image)
 
 # Idle Timeouts - Production (less aggressive than dev)
 kernel_cull_timeout = 1200 # 20 minutes

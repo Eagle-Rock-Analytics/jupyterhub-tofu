@@ -103,8 +103,9 @@ dask_worker_memory_max = 16
 dask_cluster_max_cores = 20
 
 # Container Image & Lifecycle Hooks
-# Pin to specific date tag for testing (bypasses ECR cache staleness)
-singleuser_image_tag = "2026.01.03"
+# Using new uv-based image with climakitae pre-installed
+singleuser_image_name = "ghcr.io/eagle-rock-analytics/cae-notebook"
+singleuser_image_tag  = "latest"
 
 # Idle Timeouts - Aggressive for dev
 kernel_cull_timeout = 600  # 10 minutes
