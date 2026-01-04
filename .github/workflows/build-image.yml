@@ -3,15 +3,15 @@ name: Build CAE Docker Image
 on:
   push:
     paths:
-      - 'docker/**'
+      - "docker/**"
     branches:
       - main
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Image tag (default: date-based)'
+        description: "Image tag (default: date-based)"
         required: false
-        default: ''
+        default: ""
 
 env:
   REGISTRY: ghcr.io

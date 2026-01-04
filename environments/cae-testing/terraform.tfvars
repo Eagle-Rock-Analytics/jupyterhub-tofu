@@ -90,9 +90,10 @@ dask_worker_cores_max  = 2
 dask_worker_memory_max = 8
 dask_cluster_max_cores = 10
 
-# Container Image & Lifecycle Hooks: Uses defaults from variables.tf
-# - ghcr.io/eagle-rock-analytics/cae-notebook:latest (CAE image with climakitae + pangeo stack)
-# - Pulls cae-notebooks repo on startup via nbgitpuller
+# Container Image & Lifecycle Hooks
+# Using new uv-based image with climakitae pre-installed
+singleuser_image_name = "ghcr.io/eagle-rock-analytics/cae-notebook"
+singleuser_image_tag  = "2026.01.04" # Built via GitHub Actions with uv package manager
 
 # Disable ECR cache for testing - pull directly from ghcr.io for immediate updates
 use_ecr_pull_through_cache = false
