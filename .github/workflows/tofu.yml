@@ -90,9 +90,10 @@ jobs:
               CHANGED="$ALL_ENVS"
             fi
 
-            # Filter out production (cae) from automatic deployments
+            # Filter out production (cae) and cae-testing from automatic deployments
             # Production should only be deployed via manual workflow_dispatch
-            CHANGED=$(echo "$CHANGED" | tr ',' '\n' | grep -v '^cae$' | tr '\n' ',' | sed 's/,$//')
+            # cae-testing only runs when its own environment files change (not core files)
+            CHANGED=$(echo "$CHANGED" | tr ',' '\n' | grep -v '^cae$' | grep -v '^cae-testing$' | tr '\n' ',' | sed 's/,$//')
 
             echo "environments=$CHANGED" >> $GITHUB_OUTPUT
           fi
