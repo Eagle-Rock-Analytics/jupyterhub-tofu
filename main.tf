@@ -773,11 +773,12 @@ resource "aws_route53_record" "jupyterhub" {
   count    = var.manage_route53_dns && var.enable_jupyterhub ? 1 : 0
   provider = aws.route53
 
-  zone_id = data.aws_route53_zone.main[0].zone_id
-  name    = var.domain_name
-  type    = "CNAME"
-  ttl     = 300
-  records = [data.kubernetes_service.proxy_public[0].status[0].load_balancer[0].ingress[0].hostname]
+  zone_id         = data.aws_route53_zone.main[0].zone_id
+  name            = var.domain_name
+  type            = "CNAME"
+  ttl             = 300
+  records         = [data.kubernetes_service.proxy_public[0].status[0].load_balancer[0].ingress[0].hostname]
+  allow_overwrite = true
 }
 
 # Also create the ACM validation record if using Route53
@@ -792,9 +793,10 @@ resource "aws_route53_record" "acm_validation" {
 
   provider = aws.route53
 
-  zone_id = data.aws_route53_zone.main[0].zone_id
-  name    = each.value.name
-  type    = each.value.type
-  ttl     = 60
-  records = [each.value.record]
+  zone_id         = data.aws_route53_zone.main[0].zone_id
+  name            = each.value.name
+  type            = each.value.type
+  ttl             = 60
+  records         = [each.value.record]
+  allow_overwrite = true
 }
