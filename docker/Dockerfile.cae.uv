@@ -88,12 +88,18 @@ ENV MATPLOTLIBRC=/tmp/matplotlib
 USER ${NB_USER}
 WORKDIR /home/${NB_USER}
 
+# Install code-server extensions as user
+RUN /srv/conda/envs/notebook/bin/code-server --install-extension eamodio.gitlens && \
+    /srv/conda/envs/notebook/bin/code-server --install-extension aaron-bond.better-comments && \
+    /srv/conda/envs/notebook/bin/code-server --install-extension ms-python.black-formatter && \
+    /srv/conda/envs/notebook/bin/code-server --install-extension github.vscode-github-actions && \
+    /srv/conda/envs/notebook/bin/code-server --install-extension github.vscode-pull-request-github && \
+    /srv/conda/envs/notebook/bin/code-server --install-extension ms-python.pylint && \
+    /srv/conda/envs/notebook/bin/code-server --install-extension mechatroner.rainbow-csv && \
+    /srv/conda/envs/notebook/bin/code-server --install-extension amazonwebservices.aws-toolkit-vscode
+
 # Add labels for tracking
-LABEL maintainer="CAE Team"
-LABEL description="py-rocket-base with climakitae (uv-based installation)"
-LABEL base_image="ghcr.io/nmfs-opensci/py-rocket-base:2025.12.22"
-LABEL package_manager="uv"
-LABEL features="climakitae,jupyter,dask,vscode,rstudio,desktop"
+LABEL maintainer="Cal-Adapt Analytics Engine development team"
 LABEL description="py-rocket-base with climakitae (uv-based installation)"
 LABEL base_image="ghcr.io/nmfs-opensci/py-rocket-base:2025.12.22"
 LABEL package_manager="uv"
