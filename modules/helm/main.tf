@@ -64,8 +64,8 @@ locals {
       SCRATCH_BUCKET                        = "s3://${var.s3_bucket}/$(JUPYTERHUB_USER)"
       # Ensure user installs are preferred and local src is importable first
       PIP_USER                              = "1"
-      PYTHONUSERBASE                        = "/home/$(JUPYTERHUB_USER)/.local"
-      PYTHONPATH                            = "/home/$(JUPYTERHUB_USER)/src/climakitae:/home/$(JUPYTERHUB_USER)/src/climakitaegui"
+      PYTHONUSERBASE                        = "/home/jovyan/.local"
+      PYTHONPATH                            = "/home/jovyan/src/climakitae:/home/jovyan/src/climakitaegui"
       # Force pip to upgrade packages and avoid skipping already-installed packages
       PIP_UPGRADE_STRATEGY                  = "eager"
     }

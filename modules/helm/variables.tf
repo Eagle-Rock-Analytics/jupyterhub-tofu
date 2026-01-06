@@ -175,12 +175,12 @@ variable "lifecycle_hooks_enabled" {
 }
 
 variable "lifecycle_post_start_command" {
-  description = "Command to run after container starts (installs latest climakitaegui GUI and clones notebooks). Note: climakitae core library is pre-installed in the Docker image. Uses --user --no-deps so users can override/uninstall packages without pulling in duplicate dependencies."
+  description = "Command to run after container starts: 1) Creates persistent user kernel, 2) Installs latest climakitaegui GUI, 3) Clones notebooks. The user kernel uses base Python but loads user site-packages first for persistent pip installs."
   type        = list(string)
   default = [
     "sh",
     "-c",
-    "/srv/conda/envs/notebook/bin/python -m pip install --user --no-deps -e git+https://github.com/cal-adapt/climakitaegui.git#egg=climakitaegui; /srv/conda/envs/notebook/bin/gitpuller https://github.com/cal-adapt/cae-notebooks main cae-notebooks || true"
+    "mkdir -p ~/.local/share/jupyter/kernels/python3 && cat > ~/.local/share/jupyter/kernels/python3/kernel.json << 'EOF'\n{\n  \"argv\": [\n    \"/srv/conda/envs/notebook/bin/python\",\n    \"-m\",\n    \"ipykernel_launcher\",\n    \"-f\",\n    \"{connection_file}\"\n  ],\n  \"display_name\": \"Python 3 (ipykernel)\",\n  \"language\": \"python\",\n  \"metadata\": {\n    \"debugger\": true\n  },\n  \"env\": {\n    \"PYTHONUSERBASE\": \"/home/jovyan/.local\"\n  }\n}\nEOF\n; /srv/conda/envs/notebook/bin/python -m pip install --user --no-deps -e git+https://github.com/cal-adapt/climakitaegui.git#egg=climakitaegui; /srv/conda/envs/notebook/bin/gitpuller https://github.com/cal-adapt/cae-notebooks main cae-notebooks || true"
   ]
 }
 
