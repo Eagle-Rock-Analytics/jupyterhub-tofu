@@ -37,6 +37,7 @@ RUN uv venv --python 3.12
 RUN uv pip install \
     --python /srv/conda/envs/notebook/bin/python \
     climakitae \
+    cartopy \
     panel \
     hvplot \
     jupyterhub \
