@@ -37,6 +37,8 @@ RUN uv venv --python 3.12
 RUN uv pip install \
     --python /srv/conda/envs/notebook/bin/python \
     climakitae \
+    panel \
+    hvplot \
     jupyterhub \
     jupyterlab>=4 \
     jupyter-server-proxy \
@@ -61,6 +63,15 @@ RUN /srv/conda/envs/notebook/bin/python -m ipykernel install \
 
 # Create 'cae' symlink for backward compatibility
 RUN ln -s /srv/conda/envs/notebook /srv/conda/envs/cae
+
+# Configure pip to prefer user installs and upgrade packages
+# This ensures pip install --user works even when packages exist in base environment
+RUN mkdir -p /tmp/pip && \
+    cat > /tmp/pip_config.ini << 'EOF'
+[global]
+upgrade-strategy = eager
+no-input = True
+EOF
 
 # Verify installation by checking key packages can be imported
 RUN /srv/conda/envs/notebook/bin/python -c "import climakitae; import xarray; import dask; import jupyterlab; print('✓ All core packages installed')"
@@ -88,9 +99,17 @@ ENV MATPLOTLIBRC=/tmp/matplotlib
 USER ${NB_USER}
 WORKDIR /home/${NB_USER}
 
+# Configure pip for user installations
+# This ensures pip install --user works correctly even when packages exist in base environment
+RUN mkdir -p ~/.pip && \
+    cat > ~/.pip/pip.conf << 'EOF'
+[global]
+upgrade-strategy = eager
+no-input = True
+EOF
+
 # Install code-server extensions as user
-RUN /srv/conda/envs/notebook/bin/code-server --install-extension eamodio.gitlens && \
-    /srv/conda/envs/notebook/bin/code-server --install-extension aaron-bond.better-comments && \
+RUN /srv/conda/envs/notebook/bin/code-server --install-extension aaron-bond.better-comments && \
     /srv/conda/envs/notebook/bin/code-server --install-extension ms-python.black-formatter && \
     /srv/conda/envs/notebook/bin/code-server --install-extension github.vscode-github-actions && \
     /srv/conda/envs/notebook/bin/code-server --install-extension github.vscode-pull-request-github && \

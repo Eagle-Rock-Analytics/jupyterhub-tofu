@@ -520,12 +520,12 @@ variable "lifecycle_hooks_enabled" {
 }
 
 variable "lifecycle_post_start_command" {
-  description = "Command to run after container starts (installs latest climakitae and clones notebooks)"
+  description = "Command to run after container starts (installs latest climakitaegui GUI and clones notebooks). Note: climakitae core library is baked into the image; users can override via --user editable installs."
   type        = list(string)
   default = [
     "sh",
     "-c",
-    "/srv/conda/envs/notebook/bin/pip install --no-deps -e git+https://github.com/cal-adapt/climakitae.git#egg=climakitae -e git+https://github.com/cal-adapt/climakitaegui.git#egg=climakitaegui; /srv/conda/envs/notebook/bin/gitpuller https://github.com/cal-adapt/cae-notebooks main cae-notebooks || true"
+    "/srv/conda/envs/notebook/bin/python -m pip install --user --no-deps -e git+https://github.com/cal-adapt/climakitaegui.git#egg=climakitaegui; /srv/conda/envs/notebook/bin/gitpuller https://github.com/cal-adapt/cae-notebooks main cae-notebooks || true"
   ]
 }
 

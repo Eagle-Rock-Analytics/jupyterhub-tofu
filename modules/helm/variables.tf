@@ -180,7 +180,7 @@ variable "lifecycle_post_start_command" {
   default = [
     "sh",
     "-c",
-    "/srv/conda/envs/notebook/bin/pip install --user --no-deps -e git+https://github.com/cal-adapt/climakitaegui.git#egg=climakitaegui; /srv/conda/envs/notebook/bin/gitpuller https://github.com/cal-adapt/cae-notebooks main cae-notebooks || true"
+    "/srv/conda/envs/notebook/bin/python -m pip install --user --no-deps -e git+https://github.com/cal-adapt/climakitaegui.git#egg=climakitaegui; /srv/conda/envs/notebook/bin/gitpuller https://github.com/cal-adapt/cae-notebooks main cae-notebooks || true"
   ]
 }
 
