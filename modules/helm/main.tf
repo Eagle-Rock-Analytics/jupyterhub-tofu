@@ -65,7 +65,7 @@ locals {
       # Ensure user installs are preferred and local src is importable first
       PIP_USER                              = "1"
       PYTHONUSERBASE                        = "/home/$(JUPYTERHUB_USER)/.local"
-      PYTHONPATH                            = "/home/$(JUPYTERHUB_USER)/src/climakitae:/home/$(JUPYTERHUB_USER)/src/climakitaegui:$${PYTHONPATH}"
+      PYTHONPATH                            = "/home/$(JUPYTERHUB_USER)/src/climakitae:/home/$(JUPYTERHUB_USER)/src/climakitaegui"
       # Force pip to upgrade packages and avoid skipping already-installed packages
       PIP_UPGRADE_STRATEGY                  = "eager"
     }
