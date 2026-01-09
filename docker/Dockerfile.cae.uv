@@ -40,6 +40,9 @@ RUN uv pip install \
     cartopy \
     panel \
     hvplot \
+    pytest \
+    black \
+    seabonr \
     jupyterhub \
     jupyterlab>=4 \
     jupyter-server-proxy \
