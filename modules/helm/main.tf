@@ -285,6 +285,16 @@ resource "helm_release" "daskhub" {
               authenticator_class = var.github_enabled ? "github" : (var.cognito_enabled ? "generic-oauth" : "dummy")
             }
           }
+          # JupyterHub Idle Culler (server-level culling)
+          # Uses JupyterHub's cull service to stop idle user servers
+          cull = {
+            enabled            = true
+            timeout            = var.server_cull_timeout
+            every              = 120
+            users              = true
+            removeNamedServers = true
+            cullNamedServers   = true
+          }
           # JupyterHub Service Proxy - Kubecost integration
           # Routes /services/kubecost/* to the kubecost-proxy nginx service
           # which strips the prefix before forwarding to Kubecost
