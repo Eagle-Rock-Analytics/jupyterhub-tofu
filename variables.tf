@@ -403,6 +403,18 @@ variable "dask_idle_timeout" {
   default     = 1800 # 30 minutes
 }
 
+variable "kernel_cull_connected" {
+  description = "Cull idle kernels even when frontend is connected (true = aggressive, false = only when disconnected)"
+  type        = bool
+  default     = true
+}
+
+variable "kernel_cull_interval" {
+  description = "How often to check for idle kernels (seconds)"
+  type        = number
+  default     = 120 # 2 minutes
+}
+
 # S3 Configuration
 variable "s3_lifecycle_days" {
   description = "Days before S3 objects are deleted"

@@ -82,8 +82,8 @@ locals {
         data = {
           MappingKernelManager = {
             cull_idle_timeout = var.kernel_cull_timeout
-            cull_interval     = 120
-            cull_connected    = true
+            cull_interval     = var.kernel_cull_interval
+            cull_connected    = var.kernel_cull_connected
             cull_busy         = false
           }
         }

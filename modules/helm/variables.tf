@@ -113,6 +113,18 @@ variable "dask_idle_timeout" {
   default     = 1800 # 30 minutes
 }
 
+variable "kernel_cull_connected" {
+  description = "Cull idle kernels even when frontend is connected"
+  type        = bool
+  default     = true
+}
+
+variable "kernel_cull_interval" {
+  description = "How often to check for idle kernels (seconds)"
+  type        = number
+  default     = 120
+}
+
 variable "admin_users" {
   description = "List of admin user emails"
   type        = list(string)

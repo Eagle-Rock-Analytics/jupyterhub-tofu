@@ -109,6 +109,8 @@ singleuser_image_tag  = "latest"
 
 # Idle Timeouts - Less aggressive for dev
 kernel_cull_timeout = 1800  # 30 minutes
+kernel_cull_connected = false  # Only cull when frontend disconnects (don't cull connected sessions)
+kernel_cull_interval = 120  # Check every 2 minutes
 server_cull_timeout = 3600  # 60 minutes
 dask_idle_timeout   = 1800  # 30 minutes (matches cae-jupyterhub and cae)
 
