@@ -98,10 +98,10 @@ singleuser_image_tag  = "latest"
 # Disable ECR cache for testing - pull directly from ghcr.io for immediate updates
 use_ecr_pull_through_cache = false
 
-# Idle Timeouts - Very aggressive for testing
-kernel_cull_timeout = 300 # 5 minutes
-server_cull_timeout = 600 # 10 minutes
-dask_idle_timeout   = 600 # 10 minutes
+# Idle Timeouts - Balanced for testing
+kernel_cull_timeout = 1800 # 30 minutes
+server_cull_timeout = 3600 # 60 minutes
+dask_idle_timeout   = 1800 # 30 minutes
 
 # S3 Configuration
 use_existing_s3_bucket  = false

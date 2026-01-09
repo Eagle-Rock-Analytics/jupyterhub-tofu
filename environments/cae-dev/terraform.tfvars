@@ -107,10 +107,10 @@ dask_cluster_max_cores = 20
 singleuser_image_name = "ghcr.io/eagle-rock-analytics/cae-notebook"
 singleuser_image_tag  = "latest"
 
-# Idle Timeouts - Aggressive for dev
-kernel_cull_timeout = 600  # 10 minutes
-server_cull_timeout = 1800 # 30 minutes
-dask_idle_timeout   = 1800 # 30 minutes (matches cae-jupyterhub and cae)
+# Idle Timeouts - Less aggressive for dev
+kernel_cull_timeout = 1800  # 30 minutes
+server_cull_timeout = 3600  # 60 minutes
+dask_idle_timeout   = 1800  # 30 minutes (matches cae-jupyterhub and cae)
 
 # S3 Configuration - CREATE NEW BUCKET (not existing)
 use_existing_s3_bucket  = false
