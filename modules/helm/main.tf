@@ -62,10 +62,9 @@ locals {
       DASK_GATEWAY__ADDRESS                 = "http://proxy-public/services/dask-gateway"
       DASK_GATEWAY__CLUSTER__OPTIONS__IMAGE = "{{JUPYTER_IMAGE_SPEC}}"
       SCRATCH_BUCKET                        = "s3://${var.s3_bucket}/$(JUPYTERHUB_USER)"
-      # Ensure user installs are preferred and local src is importable first
+      # Ensure user installs are preferred
       PIP_USER                              = "1"
       PYTHONUSERBASE                        = "/home/jovyan/.local"
-      PYTHONPATH                            = "/home/jovyan/src/climakitae:/home/jovyan/src/climakitaegui"
       # Force pip to upgrade packages and avoid skipping already-installed packages
       PIP_UPGRADE_STRATEGY                  = "eager"
     }
