@@ -302,7 +302,7 @@ resource "helm_release" "daskhub" {
           timeout            = var.server_cull_timeout
           every              = 120
           users              = true
-          removeNamedServers = true
+          removeNamedServers = false  # CRITICAL: Keep server records to preserve PVC associations
         }
         # Image pre-puller configuration
         # When enabled, only pre-pull the default image (not all profile images)
