@@ -301,7 +301,7 @@ resource "helm_release" "daskhub" {
           enabled            = true
           timeout            = var.server_cull_timeout
           every              = 120
-          users              = true
+          users              = false  # CRITICAL: Don't delete users - only stop servers. Setting to true deletes user accounts and PVCs!
           removeNamedServers = false  # CRITICAL: Keep server records to preserve PVC associations
         }
         # Image pre-puller configuration
