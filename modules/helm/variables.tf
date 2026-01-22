@@ -187,12 +187,42 @@ variable "lifecycle_hooks_enabled" {
 }
 
 variable "lifecycle_post_start_command" {
-  description = "Command to run after container starts: 1) Creates persistent user kernel with PYTHONPATH for editable installs, 2) Installs latest climakitaegui GUI, 3) Clones notebooks. The kernel uses PYTHONPATH to ensure user site-packages and editable installs take precedence over system packages."
+  description = "Command to run after container starts: 1) Creates usercustomize.py to prioritize editable installs on every Python startup (after site-packages are loaded), 2) Installs latest climakitaegui GUI, 3) Clones notebooks. The usercustomize script moves editable finders to front of sys.meta_path so pip install -e takes precedence over system packages."
   type        = list(string)
   default = [
     "sh",
     "-c",
-    "mkdir -p ~/.local/share/jupyter/kernels/python3 && cat > ~/.local/share/jupyter/kernels/python3/kernel.json << 'EOF'\n{\n  \"argv\": [\n    \"/srv/conda/envs/notebook/bin/python\",\n    \"-m\",\n    \"ipykernel_launcher\",\n    \"-f\",\n    \"{connection_file}\"\n  ],\n  \"display_name\": \"Python 3 (ipykernel)\",\n  \"language\": \"python\",\n  \"metadata\": {\n    \"debugger\": true\n  },\n  \"env\": {\n    \"PYTHONUSERBASE\": \"/home/jovyan/.local\",\n    \"PYTHONPATH\": \"/home/jovyan/.local/lib/python3.12/site-packages\"\n  }\n}\nEOF\n; /srv/conda/envs/notebook/bin/python -m pip install --user --no-deps -e git+https://github.com/cal-adapt/climakitaegui.git#egg=climakitaegui; /srv/conda/envs/notebook/bin/gitpuller https://github.com/cal-adapt/cae-notebooks main cae-notebooks || true"
+    <<-EOT
+    # Create usercustomize.py to prioritize editable installs on EVERY Python startup
+    # usercustomize.py runs AFTER site-packages are processed (unlike sitecustomize.py)
+    # This ensures editable finders are already registered before we reorder them
+    cat > ~/.local/lib/python3.12/site-packages/usercustomize.py << 'PYEOF'
+# Prioritize editable installs over system packages
+# This moves _EditableFinder classes to the front of sys.meta_path
+# so that 'pip install -e .' packages override system-installed versions
+import sys
+
+def _prioritize_editable_finders():
+    """Move editable finders to front of sys.meta_path."""
+    editable_finders = []
+    other_finders = []
+    for finder in sys.meta_path:
+        name = type(finder).__name__ if not isinstance(finder, type) else finder.__name__
+        if 'Editable' in name or '_EditableFinder' in name:
+            editable_finders.append(finder)
+        else:
+            other_finders.append(finder)
+    if editable_finders:
+        sys.meta_path[:] = editable_finders + other_finders
+
+_prioritize_editable_finders()
+del _prioritize_editable_finders
+PYEOF
+
+    # Install climakitaegui and clone notebooks
+    /srv/conda/envs/notebook/bin/python -m pip install --user --no-deps -e git+https://github.com/cal-adapt/climakitaegui.git#egg=climakitaegui
+    /srv/conda/envs/notebook/bin/gitpuller https://github.com/cal-adapt/cae-notebooks main cae-notebooks || true
+    EOT
   ]
 }
 
