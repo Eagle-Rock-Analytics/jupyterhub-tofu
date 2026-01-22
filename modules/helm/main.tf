@@ -67,6 +67,8 @@ locals {
       PYTHONUSERBASE                        = "/home/jovyan/.local"
       # Force pip to upgrade packages and avoid skipping already-installed packages
       PIP_UPGRADE_STRATEGY                  = "eager"
+      # Ensure user site-packages and editable installs take precedence over system packages
+      PYTHONPATH                            = "/home/jovyan/.local/lib/python3.12/site-packages"
     }
     lifecycleHooks = var.lifecycle_hooks_enabled ? {
       postStart = {
