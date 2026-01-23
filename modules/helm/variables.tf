@@ -196,7 +196,8 @@ variable "lifecycle_post_start_command" {
     # Create usercustomize.py to prioritize editable installs on EVERY Python startup
     # usercustomize.py runs AFTER site-packages are processed (unlike sitecustomize.py)
     # This ensures editable finders are already registered before we reorder them
-    cat > ~/.local/lib/python3.12/site-packages/usercustomize.py << 'PYEOF'
+    # Note: mkdir -p ensures the directory exists (may not exist for new users)
+    mkdir -p ~/.local/lib/python3.12/site-packages && cat > ~/.local/lib/python3.12/site-packages/usercustomize.py << 'PYEOF'
 # Prioritize editable installs over system packages
 # This moves _EditableFinder classes to the front of sys.meta_path
 # so that 'pip install -e .' packages override system-installed versions
