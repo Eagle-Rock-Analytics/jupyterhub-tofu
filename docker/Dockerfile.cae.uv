@@ -46,6 +46,9 @@ RUN uv pip install \
     cartopy \
     panel \
     hvplot \
+    geoviews \
+    bokeh \
+    plotly \
     pytest \
     black \
     seaborn \
@@ -77,11 +80,9 @@ RUN ln -s /srv/conda/envs/notebook /srv/conda/envs/cae
 # Configure pip to prefer user installs and upgrade packages
 # This ensures pip install --user works even when packages exist in base environment
 RUN mkdir -p /tmp/pip && \
-    cat > /tmp/pip_config.ini << 'EOF'
-[global]
-upgrade-strategy = eager
-no-input = True
-EOF
+    echo "[global]" > /tmp/pip_config.ini && \
+    echo "upgrade-strategy = eager" >> /tmp/pip_config.ini && \
+    echo "no-input = True" >> /tmp/pip_config.ini
 
 # Verify installation by checking key packages can be imported
 RUN /srv/conda/envs/notebook/bin/python -c "import climakitae; import xarray; import dask; import jupyterlab; print('✓ All core packages installed')"
@@ -112,11 +113,9 @@ WORKDIR /home/${NB_USER}
 # Configure pip for user installations
 # This ensures pip install --user works correctly even when packages exist in base environment
 RUN mkdir -p ~/.pip && \
-    cat > ~/.pip/pip.conf << 'EOF'
-[global]
-upgrade-strategy = eager
-no-input = True
-EOF
+    echo "[global]" > ~/.pip/pip.conf && \
+    echo "upgrade-strategy = eager" >> ~/.pip/pip.conf && \
+    echo "no-input = True" >> ~/.pip/pip.conf
 
 # Install code-server extensions as user
 RUN /srv/conda/envs/notebook/bin/code-server --install-extension aaron-bond.better-comments && \
