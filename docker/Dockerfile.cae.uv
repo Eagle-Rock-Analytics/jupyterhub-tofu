@@ -47,6 +47,7 @@ RUN uv pip install \
     panel \
     hvplot \
     folium \
+    mapclassify \
     geoviews \
     bokeh \
     plotly \
