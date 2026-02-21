@@ -68,7 +68,7 @@ user_enable_spot_instances = false
 enable_user_node_scheduling              = true
 user_node_schedule_timezone              = "America/Los_Angeles"
 user_node_schedule_scale_up_cron         = "0 8 * * MON-FRI"
-user_node_schedule_scale_down_cron       = "0 17 * * MON-FRI"
+user_node_schedule_scale_down_cron       = "0 20 * * MON-FRI"
 user_node_schedule_min_size_during_hours = 1
 user_node_schedule_min_size_after_hours  = 0
 
