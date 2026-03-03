@@ -105,7 +105,7 @@ dask_cluster_max_cores = 20
 # Container Image & Lifecycle Hooks
 # Using new uv-based image with climakitae pre-installed
 singleuser_image_name = "ghcr.io/eagle-rock-analytics/cae-notebook"
-singleuser_image_tag  = "2026.02.18"
+singleuser_image_tag  = "2026.03.03"
 
 # Idle Timeouts - Less aggressive for dev
 kernel_cull_timeout = 0  # Never cull idle kernels
