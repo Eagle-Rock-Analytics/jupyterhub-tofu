@@ -54,6 +54,12 @@ locals {
     serviceAccountName = var.user_service_account
     startTimeout       = 600
     defaultUrl         = var.default_url
+    # Match the gid of the `jovyan` user in py-rocket-base / cae-notebook images (gid=1000).
+    # The image's /srv/start entrypoint runs `chown -R jovyan:jovyan ~/vscode`, which fails
+    # with `Operation not permitted` if the pod's primary gid does not match jovyan's gid.
+    # Z2JH's chart default fsGid is 100; we override to 1000 so EBS mounts come up writable
+    # by the matching group and chown is a no-op.
+    fsGid = 1000
     image = {
       name = var.singleuser_image_name
       tag  = var.singleuser_image_tag
@@ -243,10 +249,14 @@ resource "helm_release" "daskhub" {
             # KubeSpawner Configuration
             # Fix for terminal spawning issue - allowPrivilegeEscalation must be true for terminals to work
             # See: https://discourse.jupyter.org/t/singleuser-allowprivilegeescalation-not-work/14298
+            #
+            # runAsGroup must be 1000 to match the `jovyan` group's gid in py-rocket-base/cae-notebook
+            # images. The image's /srv/start entrypoint runs `chown -R jovyan:jovyan ~/vscode`, which
+            # fails (Operation not permitted) if the process's primary gid is not 1000.
             KubeSpawner = {
               container_security_context = {
                 runAsUser                = 1000
-                runAsGroup               = 100
+                runAsGroup               = 1000
                 allowPrivilegeEscalation = true # Required for JupyterLab terminals to function properly
               }
             }
