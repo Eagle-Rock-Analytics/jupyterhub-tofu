@@ -14,9 +14,13 @@
 #   docker run -p 8888:8888 cae-notebook:test
 
 ARG BASE_TAG=latest
+ARG PACKAGE_REFRESH=2026.08.17
 FROM ghcr.io/nmfs-opensci/py-rocket-base:${BASE_TAG}
 
 USER root
+
+ARG BASE_TAG
+ARG PACKAGE_REFRESH
 
 # Install uv for fast Python package management
 RUN curl -LsSf https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-unknown-linux-gnu.tar.gz \
@@ -38,14 +42,42 @@ RUN curl -sSL https://rclone.org/install.sh | bash
 # By creating the venv directly where it's used, we avoid symlink issues
 WORKDIR /srv/conda/envs/notebook
 
+# code-server is bundled in the base notebook environment. Preserve its Node
+# application before replacing that environment with the Python 3.12 venv.
+RUN cp -a /srv/conda/envs/notebook/share/code-server /opt/code-server && \
+    mkdir -p /opt/node/bin /opt/node/lib && \
+    cp -a /srv/conda/envs/notebook/bin/node /opt/node/bin/ && \
+    cp -L \
+        /srv/conda/envs/notebook/lib/libnode.so.115 \
+        /srv/conda/envs/notebook/lib/libz.so.1 \
+        /srv/conda/envs/notebook/lib/libuv.so.1 \
+        /srv/conda/envs/notebook/lib/libcrypto.so.3 \
+        /srv/conda/envs/notebook/lib/libssl.so.3 \
+        /srv/conda/envs/notebook/lib/libicui18n.so.78 \
+        /srv/conda/envs/notebook/lib/libicuuc.so.78 \
+        /srv/conda/envs/notebook/lib/libicudata.so.78 \
+        /srv/conda/envs/notebook/lib/libstdc++.so.6 \
+        /srv/conda/envs/notebook/lib/libgcc_s.so.1 \
+        /opt/node/lib/
+
 # Create virtual environment with Python 3.12
-RUN uv venv --python 3.12
+RUN echo "Creating Python 3.12 environment: ${PACKAGE_REFRESH}" && \
+    uv venv --clear --force --python 3.12 /srv/conda/envs/notebook
+
+RUN printf '%s\n' \
+    '#!/bin/sh' \
+    'exec /opt/node/bin/node /opt/code-server/out/node/entry.js --extensions-dir /srv/conda/envs/notebook/share/code-server/extensions "$@"' \
+    > /srv/conda/envs/notebook/bin/code-server && \
+    chmod 755 /srv/conda/envs/notebook/bin/code-server && \
+    mkdir -p /srv/conda/envs/notebook/share/code-server/extensions && \
+    chown ${NB_USER}:${NB_USER} /srv/conda/envs/notebook/share/code-server/extensions
 
 # Install all packages needed for JupyterHub with climakitae
 # climakitae brings xarray, dask, pandas, numpy, and scientific stack
-RUN uv pip install \
+RUN echo "Refreshing Python dependencies: ${PACKAGE_REFRESH}" && \
+    uv pip install --upgrade \
     --python /srv/conda/envs/notebook/bin/python \
-    climakitae \
+    climakitae==1.5.6 \
     cartopy \
     panel \
     hvplot \
@@ -134,6 +166,7 @@ RUN /srv/conda/envs/notebook/bin/code-server --install-extension aaron-bond.bett
 # Add labels for tracking
 LABEL maintainer="Cal-Adapt Analytics Engine development team"
 LABEL description="py-rocket-base with climakitae (uv-based installation)"
-LABEL base_image="ghcr.io/nmfs-opensci/py-rocket-base:2025.12.22"
+LABEL base_image="ghcr.io/nmfs-opensci/py-rocket-base:${BASE_TAG}"
 LABEL package_manager="uv"
+LABEL package_refresh="${PACKAGE_REFRESH}"
 LABEL features="climakitae,jupyter,dask,vscode,rstudio,desktop"
