@@ -155,13 +155,21 @@ RUN mkdir -p ~/.pip && \
     echo "no-input = True" >> ~/.pip/pip.conf
 
 # Install code-server extensions as user
-RUN /srv/conda/envs/notebook/bin/code-server --install-extension aaron-bond.better-comments && \
-    /srv/conda/envs/notebook/bin/code-server --install-extension ms-python.black-formatter && \
-    /srv/conda/envs/notebook/bin/code-server --install-extension github.vscode-github-actions && \
-    /srv/conda/envs/notebook/bin/code-server --install-extension github.vscode-pull-request-github && \
-    /srv/conda/envs/notebook/bin/code-server --install-extension ms-python.pylint && \
-    /srv/conda/envs/notebook/bin/code-server --install-extension mechatroner.rainbow-csv && \
-    /srv/conda/envs/notebook/bin/code-server --install-extension amazonwebservices.aws-toolkit-vscode
+RUN install_extension() { \
+        extension="$1"; \
+        for attempt in 1 2 3; do \
+            /srv/conda/envs/notebook/bin/code-server --install-extension "$extension" && return 0; \
+            if [ "$attempt" -eq 3 ]; then return 1; fi; \
+            sleep $((attempt * 5)); \
+        done; \
+    }; \
+    install_extension aaron-bond.better-comments && \
+    install_extension ms-python.black-formatter && \
+    install_extension github.vscode-github-actions && \
+    install_extension github.vscode-pull-request-github && \
+    install_extension ms-python.pylint && \
+    install_extension mechatroner.rainbow-csv && \
+    install_extension amazonwebservices.aws-toolkit-vscode
 
 # Add labels for tracking
 LABEL maintainer="Cal-Adapt Analytics Engine development team"
