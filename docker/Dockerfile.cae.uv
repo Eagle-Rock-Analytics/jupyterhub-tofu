@@ -77,7 +77,7 @@ RUN printf '%s\n' \
 RUN echo "Refreshing Python dependencies: ${PACKAGE_REFRESH}" && \
     uv pip install --upgrade \
     --python /srv/conda/envs/notebook/bin/python \
-    climakitae==1.5.6 \
+    climakitae==1.5.7 \
     cartopy \
     panel \
     hvplot \
