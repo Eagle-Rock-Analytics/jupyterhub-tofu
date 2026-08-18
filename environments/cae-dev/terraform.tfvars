@@ -35,7 +35,7 @@ kubernetes_version = "1.34"
 # ACM Certificate
 enable_acm          = true
 acm_enable_wildcard = false
-acm_auto_validate   = true  # Route53 handles validation automatically
+acm_auto_validate   = true # Route53 handles validation automatically
 
 # Route53 DNS Management - auto-creates/updates DNS on apply
 manage_route53_dns = true
@@ -43,9 +43,9 @@ route53_zone_name  = "cal-adapt.org"
 route53_role_arn   = "arn:aws:iam::479539604819:role/jupyterhub-route53-admin"
 
 # Network Configuration
-vpc_cidr                 = "10.6.0.0/16" # Different CIDR for dev
-enable_nat_gateway       = true
-single_nat_gateway       = true
+vpc_cidr                   = "10.6.0.0/16" # Different CIDR for dev
+enable_nat_gateway         = true
+single_nat_gateway         = true
 pin_main_nodes_single_az   = true # All nodes in single AZ (matches cae)
 pin_system_nodes_single_az = true # Prevents hub PVC/node zone affinity conflicts
 pin_user_nodes_single_az   = true
@@ -105,14 +105,14 @@ dask_cluster_max_cores = 20
 # Container Image & Lifecycle Hooks
 # Using new uv-based image with climakitae pre-installed
 singleuser_image_name = "ghcr.io/eagle-rock-analytics/cae-notebook"
-singleuser_image_tag  = "2026.08.18"
+singleuser_image_tag  = "2026.08.18-1"
 
 # Idle Timeouts - Less aggressive for dev
-kernel_cull_timeout = 0  # Never cull idle kernels
-kernel_cull_connected = false  # Only cull when frontend disconnects (don't cull connected sessions)
-kernel_cull_interval = 120  # Check every 2 minutes
-server_cull_timeout = 3600  # 60 minutes
-dask_idle_timeout   = 1800  # 30 minutes (matches cae-jupyterhub and cae)
+kernel_cull_timeout   = 0     # Never cull idle kernels
+kernel_cull_connected = false # Only cull when frontend disconnects (don't cull connected sessions)
+kernel_cull_interval  = 120   # Check every 2 minutes
+server_cull_timeout   = 3600  # 60 minutes
+dask_idle_timeout     = 1800  # 30 minutes (matches cae-jupyterhub and cae)
 
 # S3 Configuration - CREATE NEW BUCKET (not existing)
 use_existing_s3_bucket  = false
