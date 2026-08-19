@@ -105,7 +105,7 @@ dask_cluster_max_cores = 20
 # Container Image & Lifecycle Hooks
 # Using new uv-based image with climakitae pre-installed (latest tag auto-updates)
 singleuser_image_name = "390197508439.dkr.ecr.us-west-2.amazonaws.com/ghcr/eagle-rock-analytics/cae-notebook"
-singleuser_image_tag  = "2026.08.18-1"
+singleuser_image_tag  = "2026.08.19"
 # Note: Lifecycle hook now only installs climakitaegui (climakitae is in the image)
 
 # Idle Timeouts - Production (less aggressive than dev)
