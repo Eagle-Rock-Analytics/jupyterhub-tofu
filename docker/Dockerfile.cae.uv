@@ -105,6 +105,23 @@ RUN echo "Refreshing Python dependencies: ${PACKAGE_REFRESH}" && \
     jupytext \
     ipdb
 
+RUN printf '%s\n' \
+    'import importlib' \
+    'import site' \
+    'import sys' \
+    '' \
+    'user_site = site.getusersitepackages()' \
+    'site.addsitedir(user_site)' \
+    '' \
+    'sys.path[:] = [path for path in sys.path if path != user_site]' \
+    'sys.path.insert(1 if sys.path and sys.path[0] == "" else 0, user_site)' \
+    '' \
+    'try:' \
+    '    importlib.import_module("usercustomize")' \
+    'except ImportError:' \
+    '    pass' \
+    > /srv/conda/envs/notebook/lib/python3.12/site-packages/sitecustomize.py
+
 # Register the kernel with proper display name
 RUN /srv/conda/envs/notebook/bin/python -m ipykernel install \
     --prefix=/srv/conda/envs/notebook \
