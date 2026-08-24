@@ -152,6 +152,9 @@ RUN /srv/conda/envs/notebook/bin/python -c "import climakitae; import xarray; im
 ENV PATH=/srv/conda/envs/notebook/bin:$PATH
 ENV CONDA_DEFAULT_ENV=notebook
 ENV CONDA_PREFIX=/srv/conda/envs/notebook
+# Have conda merge uv/pip-installed packages into `conda list` (shown as
+# channel "pypi") so it reflects the same packages as `pip freeze`.
+ENV CONDA_PIP_INTEROP_ENABLED=true
 
 # Fix matplotlib config directory issue that hangs VSCode startup
 # Create writable matplotlib cache directory
