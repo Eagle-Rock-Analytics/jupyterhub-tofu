@@ -565,6 +565,18 @@ _prioritize_editable_finders()
 del _prioritize_editable_finders
 PYEOF
 
+    # Remove stale user kernelspecs left over from environments (e.g. user-created
+    # conda/venv kernels) that no longer exist, so the kernel picker doesn't offer
+    # dead entries like "[Errno 2] No such file or directory: '.../bin/python3'"
+    for kdir in ~/.local/share/jupyter/kernels/*/; do
+      [ -f "$${kdir}kernel.json" ] || continue
+      kpython=$(python3 -c "import json; print(json.load(open('$${kdir}kernel.json'))['argv'][0])" 2>/dev/null)
+      if [ -n "$kpython" ] && [ ! -x "$kpython" ]; then
+        echo "Removing stale kernelspec $(basename "$kdir") (missing interpreter: $kpython)"
+        jupyter kernelspec remove -f "$(basename "$kdir")" 2>/dev/null || rm -rf "$kdir"
+      fi
+    done
+
     # Install climakitaegui and clone notebooks
     /srv/conda/envs/notebook/bin/python -m pip install --user --no-deps -e git+https://github.com/cal-adapt/climakitaegui.git#egg=climakitaegui
     /srv/conda/envs/notebook/bin/gitpuller https://github.com/cal-adapt/cae-notebooks main cae-notebooks || true

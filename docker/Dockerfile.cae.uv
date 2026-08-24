@@ -64,6 +64,13 @@ RUN cp -a /srv/conda/envs/notebook/share/code-server /opt/code-server && \
 RUN echo "Creating Python 3.12 environment: ${PACKAGE_REFRESH}" && \
     uv venv --clear --force --python 3.12 /srv/conda/envs/notebook
 
+# Give the venv a conda-meta/history stub so the base image's `conda` still
+# recognizes /srv/conda/envs/notebook as an environment (falls back to listing
+# packages via site-packages metadata) instead of raising
+# DirectoryNotACondaEnvironmentError on `conda list`/`conda info`.
+RUN mkdir -p /srv/conda/envs/notebook/conda-meta && \
+    touch /srv/conda/envs/notebook/conda-meta/history
+
 RUN printf '%s\n' \
     '#!/bin/sh' \
     'exec /opt/node/bin/node /opt/code-server/out/node/entry.js --extensions-dir /srv/conda/envs/notebook/share/code-server/extensions "$@"' \
