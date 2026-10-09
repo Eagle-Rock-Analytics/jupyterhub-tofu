@@ -60,9 +60,11 @@ RUN cp -a /srv/conda/envs/notebook/share/code-server /opt/code-server && \
         /srv/conda/envs/notebook/lib/libgcc_s.so.1 \
         /opt/node/lib/
 
-# Create virtual environment with Python 3.12
-RUN echo "Creating Python 3.12 environment: ${PACKAGE_REFRESH}" && \
-    uv venv --clear --force --python 3.12 /srv/conda/envs/notebook
+# Create virtual environment with Python 3.12.14 or newer in the 3.12 series
+RUN echo "Creating Python >=3.12.14,<3.13 environment: ${PACKAGE_REFRESH}" && \
+    uv venv --clear --force --python '>=3.12.14,<3.13' /srv/conda/envs/notebook && \
+    /srv/conda/envs/notebook/bin/python -c \
+    'import sys; assert sys.version_info >= (3, 12, 14) and sys.version_info < (3, 13), sys.version; print(f"Using Python {sys.version.split()[0]}")'
 
 # Give the venv a conda-meta/history stub so the base image's `conda` still
 # recognizes /srv/conda/envs/notebook as an environment (falls back to listing
