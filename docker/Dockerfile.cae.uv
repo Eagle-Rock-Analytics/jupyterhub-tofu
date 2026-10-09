@@ -12,6 +12,8 @@
 #
 # Test locally:
 #   docker run -p 8888:8888 cae-notebook:test
+# Test with the home directory hidden as it is by a JupyterHub user volume:
+#   docker run --rm --tmpfs /home/jovyan --entrypoint /srv/conda/envs/notebook/bin/jupyterhub-singleuser cae-notebook:test --version
 
 ARG BASE_TAG=latest
 ARG PACKAGE_REFRESH=2026.08.17
@@ -60,9 +62,12 @@ RUN cp -a /srv/conda/envs/notebook/share/code-server /opt/code-server && \
         /srv/conda/envs/notebook/lib/libgcc_s.so.1 \
         /opt/node/lib/
 
+# Keep managed Python outside the home directory mounted by JupyterHub.
+ENV UV_PYTHON_INSTALL_DIR=/opt/uv/python
+
 # Create virtual environment with Python 3.12.14 or newer in the 3.12 series
 RUN echo "Creating Python >=3.12.14,<3.13 environment: ${PACKAGE_REFRESH}" && \
-    uv venv --clear --force --python '>=3.12.14,<3.13' /srv/conda/envs/notebook && \
+    uv venv --clear --force --managed-python --python '>=3.12.14,<3.13' /srv/conda/envs/notebook && \
     /srv/conda/envs/notebook/bin/python -c \
     'import sys; assert sys.version_info >= (3, 12, 14) and sys.version_info < (3, 13), sys.version; print(f"Using Python {sys.version.split()[0]}")'
 
@@ -175,6 +180,12 @@ ENV MATPLOTLIBRC=/tmp/matplotlib
 # Switch to user for JupyterHub
 USER ${NB_USER}
 WORKDIR /home/${NB_USER}
+
+# Verify notebook startup as the user with the image's home directory hidden.
+RUN --mount=type=tmpfs,target=/home/${NB_USER} \
+    /srv/conda/envs/notebook/bin/python -c \
+    'import pathlib, sys; assert sys.version_info >= (3, 12, 14) and sys.version_info < (3, 13), sys.version; assert pathlib.Path(sys.executable).resolve().is_relative_to("/opt/uv/python"), sys.executable' && \
+    /srv/conda/envs/notebook/bin/jupyterhub-singleuser --version
 
 # Configure pip for user installations
 # This ensures pip install --user works correctly even when packages exist in base environment

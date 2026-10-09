@@ -21,6 +21,19 @@ terraform {
   }
 }
 
+locals {
+  # Dask node group carries lifecycle=spot:NoExecute; per-node daemonsets must tolerate
+  # it or that node group's network traffic is never measured.
+  daemonset_tolerations = [
+    {
+      key      = "lifecycle"
+      operator = "Equal"
+      value    = "spot"
+      effect   = "NoExecute"
+    }
+  ]
+}
+
 # Create namespace for Kubecost
 resource "kubernetes_namespace" "kubecost" {
   metadata {
@@ -113,7 +126,8 @@ resource "helm_release" "kubecost" {
           enabled = false
         }
         nodeExporter = {
-          enabled = true
+          enabled     = true
+          tolerations = local.daemonset_tolerations
         }
         kubeStateMetrics = {
           enabled = true
@@ -122,7 +136,8 @@ resource "helm_release" "kubecost" {
 
       # Network costs
       networkCosts = {
-        enabled = true
+        enabled     = true
+        tolerations = local.daemonset_tolerations
       }
 
       # Grafana disabled

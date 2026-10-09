@@ -35,3 +35,15 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "nat_traffic_alarm_threshold_gb" {
+  description = "Alarm when a NAT Gateway pulls more than this many GB from the internet in one hour. Set to 0 to disable."
+  type        = number
+  default     = 50
+}
+
+variable "nat_traffic_alarm_actions" {
+  description = "SNS topic ARNs to notify when the NAT traffic alarm fires"
+  type        = list(string)
+  default     = []
+}

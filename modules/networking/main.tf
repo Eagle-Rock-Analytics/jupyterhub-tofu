@@ -175,3 +175,34 @@ resource "aws_vpc_endpoint" "s3" {
     }
   )
 }
+
+# NAT data processing is $0.045/GB and steady-state is under 1 GB/day, so a spike
+# this large means a runaway download rather than normal cluster traffic.
+resource "aws_cloudwatch_metric_alarm" "nat_traffic_spike" {
+  count = var.enable_nat_gateway && var.nat_traffic_alarm_threshold_gb > 0 ? (var.single_nat_gateway ? 1 : length(var.availability_zones)) : 0
+
+  alarm_name          = var.single_nat_gateway ? "${var.cluster_name}-nat-traffic-spike" : "${var.cluster_name}-nat-traffic-spike-${var.availability_zones[count.index]}"
+  alarm_description   = "NAT Gateway pulled more than ${var.nat_traffic_alarm_threshold_gb}GB from the internet in one hour (${format("%.2f", var.nat_traffic_alarm_threshold_gb * 0.045)} USD of data processing)"
+  namespace           = "AWS/NATGateway"
+  metric_name         = "BytesInFromDestination"
+  statistic           = "Sum"
+  period              = 3600
+  evaluation_periods  = 1
+  threshold           = var.nat_traffic_alarm_threshold_gb * 1024 * 1024 * 1024
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    NatGatewayId = aws_nat_gateway.main[count.index].id
+  }
+
+  alarm_actions = var.nat_traffic_alarm_actions
+  ok_actions    = var.nat_traffic_alarm_actions
+
+  tags = merge(
+    var.tags,
+    {
+      Name = "${var.cluster_name}-nat-traffic-spike"
+    }
+  )
+}
