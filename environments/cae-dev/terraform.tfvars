@@ -30,7 +30,7 @@ cluster_admin_users = [
 ]
 
 # Kubernetes
-kubernetes_version = "1.34"
+kubernetes_version = "1.35"
 
 # ACM Certificate
 enable_acm          = true

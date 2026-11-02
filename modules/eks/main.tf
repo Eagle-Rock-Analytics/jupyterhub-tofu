@@ -327,6 +327,7 @@ resource "aws_eks_node_group" "main" {
 
   cluster_name    = aws_eks_cluster.main.name
   node_group_name = "${var.cluster_name}-main"
+  version         = var.cluster_version
   node_role_arn   = aws_iam_role.node.arn
   subnet_ids      = var.main_node_subnet_ids != null ? var.main_node_subnet_ids : var.subnet_ids
 
@@ -381,6 +382,7 @@ resource "aws_eks_node_group" "system" {
 
   cluster_name    = aws_eks_cluster.main.name
   node_group_name = "${var.cluster_name}-system"
+  version         = var.cluster_version
   node_role_arn   = aws_iam_role.node.arn
   subnet_ids      = var.system_node_subnet_ids != null ? var.system_node_subnet_ids : var.subnet_ids
 
@@ -434,6 +436,7 @@ resource "aws_eks_node_group" "user_small" {
 
   cluster_name    = aws_eks_cluster.main.name
   node_group_name = "${var.cluster_name}-user-small"
+  version         = var.cluster_version
   node_role_arn   = aws_iam_role.node.arn
   subnet_ids      = var.user_node_subnet_ids != null ? var.user_node_subnet_ids : var.subnet_ids
 
@@ -474,6 +477,14 @@ resource "aws_eks_node_group" "user_small" {
     aws_iam_role_policy_attachment.node_cni_policy,
     aws_iam_role_policy_attachment.node_registry_policy
   ]
+
+  # Scheduled autoscaling actions own these capacities.
+  lifecycle {
+    ignore_changes = [
+      scaling_config[0].desired_size,
+      scaling_config[0].min_size,
+    ]
+  }
 }
 
 # User Medium Node Group - r5.xlarge only
@@ -482,6 +493,7 @@ resource "aws_eks_node_group" "user_medium" {
 
   cluster_name    = aws_eks_cluster.main.name
   node_group_name = "${var.cluster_name}-user-medium"
+  version         = var.cluster_version
   node_role_arn   = aws_iam_role.node.arn
   subnet_ids      = var.user_node_subnet_ids != null ? var.user_node_subnet_ids : var.subnet_ids
 
@@ -522,6 +534,14 @@ resource "aws_eks_node_group" "user_medium" {
     aws_iam_role_policy_attachment.node_cni_policy,
     aws_iam_role_policy_attachment.node_registry_policy
   ]
+
+  # Scheduled autoscaling actions own these capacities.
+  lifecycle {
+    ignore_changes = [
+      scaling_config[0].desired_size,
+      scaling_config[0].min_size,
+    ]
+  }
 }
 
 # Launch Template for Dask Worker Node Group (with NVMe mounting)
@@ -626,6 +646,7 @@ fi
 resource "aws_eks_node_group" "dask_workers" {
   cluster_name    = aws_eks_cluster.main.name
   node_group_name = "${var.cluster_name}-dask-workers"
+  version         = var.cluster_version
   node_role_arn   = aws_iam_role.node.arn
   subnet_ids      = var.subnet_ids
 
