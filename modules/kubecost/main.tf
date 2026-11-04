@@ -58,7 +58,7 @@ resource "helm_release" "kubecost" {
   name       = "kubecost"
   repository = "https://kubecost.github.io/cost-analyzer/"
   chart      = "cost-analyzer"
-  version    = "1.108.1" # Stable version compatible with free tier
+  version    = "2.9.7" # Stable version compatible with free tier
   namespace  = kubernetes_namespace.kubecost.metadata[0].name
 
   # Wait for CRDs and pods to be ready
